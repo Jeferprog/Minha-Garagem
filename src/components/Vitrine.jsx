@@ -15,19 +15,22 @@ export default function Vitrine({ admin = false }) {
   const [veiculos, setVeiculos] = useState([])
   const [whatsapp, setWhatsapp] = useState('')
   const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
-    Promise.all([listarVeiculos(), obterConfig()]).then(([lista, config]) => {
-      setVeiculos(lista)
-      setWhatsapp(config.whatsapp || '')
-      setCarregando(false)
-    })
+    Promise.all([listarVeiculos(), obterConfig()])
+      .then(([lista, config]) => {
+        setVeiculos(lista)
+        setWhatsapp(config.whatsapp || '')
+      })
+      .catch((e) => setErro(e.message || 'Não foi possível carregar a vitrine.'))
+      .finally(() => setCarregando(false))
   }, [])
 
   const visiveis = veiculos.filter(
     (v) => v.status === 'a_venda' || v.status === 'reservado',
   )
-  const usandoExemplos = !carregando && visiveis.length === 0
+  const usandoExemplos = !carregando && !erro && visiveis.length === 0
   const paraMostrar = usandoExemplos ? VEICULOS_EXEMPLO : visiveis
 
   return (
@@ -41,6 +44,7 @@ export default function Vitrine({ admin = false }) {
       )}
 
       {carregando && <p className="texto-suave">Carregando…</p>}
+      {erro && <p className="aviso-erro">{erro}</p>}
 
       {usandoExemplos && (
         <div className="vitrine__exemplos">

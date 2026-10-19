@@ -7,18 +7,25 @@ export default function Configuracoes() {
   const [whatsapp, setWhatsapp] = useState('')
   const [carregando, setCarregando] = useState(true)
   const [salvo, setSalvo] = useState(false)
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
-    obterConfig().then((c) => {
-      setWhatsapp(c.whatsapp || '')
-      setCarregando(false)
-    })
+    obterConfig()
+      .then((c) => setWhatsapp(c.whatsapp || ''))
+      .catch((e) => setErro(e.message || 'Não foi possível carregar as configurações.'))
+      .finally(() => setCarregando(false))
   }, [])
 
   async function salvar(evento) {
     evento.preventDefault()
-    await salvarConfig({ whatsapp: whatsapp.trim() })
-    setSalvo(true)
+    setErro('')
+    setSalvo(false)
+    try {
+      await salvarConfig({ whatsapp: whatsapp.trim() })
+      setSalvo(true)
+    } catch (e) {
+      setErro(e.message || 'Não foi possível salvar.')
+    }
   }
 
   if (carregando) return <p className="texto-suave">Carregando…</p>
@@ -50,6 +57,8 @@ export default function Configuracoes() {
           </p>
         </div>
       </fieldset>
+
+      {erro && <p className="aviso-erro">{erro}</p>}
 
       <div className="form__acoes">
         {salvo && <span className="texto-salvo">✓ Configurações salvas</span>}
