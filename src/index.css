@@ -1,22 +1,52 @@
 /* ===========================================================
-   Estilos do sistema Minha Garagem.
-   Cores e medidas ficam em variáveis (:root) para facilitar
-   ajustes depois — mude num lugar só e vale para tudo.
+   Minha Garagem — estilo visual (baseado no design do Stitch).
+   As cores e medidas ficam em variáveis (:root): mude num lugar
+   só e vale para todo o sistema.
    =========================================================== */
 
 :root {
-  --cor-fundo: #f1f5f9;
-  --cor-superficie: #ffffff;
-  --cor-borda: #e2e8f0;
-  --cor-texto: #0f172a;
-  --cor-texto-suave: #64748b;
-  --cor-primaria: #2563eb;
-  --cor-primaria-escura: #1d4ed8;
-  --cor-perigo: #dc2626;
-  --cor-perigo-escura: #b91c1c;
-  --cor-sucesso: #16a34a;
-  --raio: 10px;
-  --sombra: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  /* Superfícies e texto */
+  --canvas: #f8fafc;
+  --superficie: #ffffff;
+  --superficie-2: #f8fafc;
+  --borda: #e2e8f0;
+  --borda-forte: #cbd5e1;
+  --texto: #0f172a;
+  --texto-suave: #475569;
+  --texto-faint: #94a3b8;
+
+  /* Cor principal (azul) */
+  --primaria: #1d4ed8;
+  --primaria-escura: #1e40af;
+  --primaria-tint: #eff6ff;
+
+  /* Cores de status / semânticas */
+  --verde: #059669;
+  --verde-tint: #ecfdf5;
+  --verde-borda: #a7f3d0;
+  --ambar: #d97706;
+  --ambar-tint: #fffbeb;
+  --ambar-borda: #fde68a;
+  --ambar-texto: #92400e;
+  --violeta: #7c3aed;
+  --violeta-tint: #f5f3ff;
+  --violeta-borda: #ddd6fe;
+  --slate: #64748b;
+  --slate-tint: #f1f5f9;
+  --slate-borda: #cbd5e1;
+  --danger: #dc2626;
+  --danger-tint: #fef2f2;
+  --danger-borda: #fecaca;
+
+  /* Cantos e sombras */
+  --raio-sm: 8px;
+  --raio: 12px;
+  --raio-lg: 16px;
+  --raio-xl: 24px;
+  --sombra-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --sombra-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+
+  --largura-maxima: 1200px;
 }
 
 * {
@@ -25,35 +55,62 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background: var(--cor-fundo);
-  color: var(--cor-texto);
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--canvas);
+  color: var(--texto);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3 {
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
-/* ----------------- Estrutura geral ----------------- */
-
-.app {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px;
+.texto-suave {
+  color: var(--texto-suave);
 }
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Números alinhados (colunas de dinheiro) */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.valor-positivo {
+  color: var(--verde);
+}
+
+.valor-negativo {
+  color: var(--danger);
+}
+
+/* ----------------- Cabeçalho ----------------- */
 
 .cabecalho {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+  box-shadow: var(--sombra-sm);
+}
+
+.cabecalho__inner {
+  max-width: var(--largura-maxima);
+  margin: 0 auto;
+  min-height: 64px;
+  padding: 10px 24px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 16px 0;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--cor-borda);
+  gap: 12px;
 }
 
 .cabecalho__marca {
@@ -62,35 +119,80 @@ h3 {
   gap: 12px;
 }
 
-.cabecalho__logo {
-  font-size: 32px;
+.cabecalho__logo-box {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--raio-sm);
+  background: var(--primaria);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.cabecalho__marca h1 {
-  font-size: 22px;
+.cabecalho__titulo {
+  font-size: 18px;
+  line-height: 1.1;
 }
 
-.cabecalho__marca p {
-  margin: 0;
-  color: var(--cor-texto-suave);
-  font-size: 14px;
+.cabecalho__sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--texto-suave);
 }
 
-.cabecalho__nav {
+.cabecalho__acoes {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
 }
 
-.conteudo {
-  padding: 16px 0;
+.nav {
+  display: flex;
+  gap: 4px;
+}
+
+.nav__link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  border-radius: var(--raio-sm);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav__link:hover {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+.nav__link.ativo {
+  background: var(--primaria-tint);
+  color: var(--primaria);
+}
+
+/* ----------------- Conteúdo e rodapé ----------------- */
+
+.conteudo__inner {
+  max-width: var(--largura-maxima);
+  margin: 0 auto;
+  padding: 24px;
 }
 
 .rodape {
-  margin-top: 32px;
-  padding: 16px 0;
-  border-top: 1px solid var(--cor-borda);
-  color: var(--cor-texto-suave);
+  max-width: var(--largura-maxima);
+  margin: 24px auto 0;
+  padding: 20px 24px 32px;
+  border-top: 1px solid var(--borda);
+  color: var(--texto-suave);
   font-size: 13px;
   text-align: center;
 }
@@ -102,13 +204,16 @@ h3 {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
+  height: 40px;
+  padding: 0 16px;
   border: 1px solid transparent;
-  border-radius: var(--raio);
-  font-size: 15px;
+  border-radius: var(--raio-sm);
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
 }
 
 .botao:disabled {
@@ -117,65 +222,213 @@ h3 {
 }
 
 .botao--pequeno {
-  padding: 6px 12px;
-  font-size: 14px;
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
 }
 
 .botao--primario {
-  background: var(--cor-primaria);
+  background: var(--primaria);
   color: #fff;
+  box-shadow: var(--sombra-sm);
 }
 
 .botao--primario:hover:not(:disabled) {
-  background: var(--cor-primaria-escura);
+  background: var(--primaria-escura);
 }
 
 .botao--neutro {
-  background: var(--cor-superficie);
-  color: var(--cor-texto);
-  border-color: var(--cor-borda);
+  background: var(--superficie);
+  color: var(--texto);
+  border-color: var(--borda);
+  box-shadow: var(--sombra-sm);
 }
 
 .botao--neutro:hover:not(:disabled) {
-  background: #f8fafc;
+  background: var(--superficie-2);
 }
 
 .botao--neutro.ativo {
-  border-color: var(--cor-primaria);
-  color: var(--cor-primaria);
+  border-color: var(--primaria);
+  color: var(--primaria);
 }
 
 .botao--perigo {
-  background: var(--cor-superficie);
-  color: var(--cor-perigo);
-  border-color: #fecaca;
+  background: var(--danger-tint);
+  color: var(--danger);
+  border-color: var(--danger-borda);
 }
 
 .botao--perigo:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: var(--cor-perigo);
+  background: #fee2e2;
 }
 
-/* ----------------- Lista + filtros ----------------- */
+/* ----------------- Topo da lista ----------------- */
 
-.lista-topo {
+.lista-cabecalho {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.lista-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lista-titulo h2 {
+  font-size: 24px;
+}
+
+.pill-contagem {
+  background: var(--primaria-tint);
+  color: var(--primaria);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.lista-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--texto-suave);
+}
+
+.busca-wrap {
+  position: relative;
+  min-width: 260px;
+  flex: 1;
+  max-width: 420px;
+}
+
+.busca-wrap__icone {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texto-faint);
+  pointer-events: none;
+  display: flex;
 }
 
 .busca {
-  flex: 1;
-  min-width: 220px;
-  max-width: 420px;
-  padding: 10px 12px;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  font-size: 15px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 38px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  background: var(--superficie);
+  box-shadow: var(--sombra-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--texto);
 }
+
+.busca:focus {
+  outline: none;
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+
+/* ----------------- Faixa de indicadores (KPIs) ----------------- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kpi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-lg);
+  padding: 16px;
+  box-shadow: var(--sombra-sm);
+}
+
+.kpi__texto {
+  min-width: 0;
+}
+
+.kpi__rotulo {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+.kpi__valor {
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+}
+
+.kpi__valor--primaria {
+  color: var(--primaria);
+}
+
+.kpi__valor--verde {
+  color: var(--verde);
+}
+
+.kpi__sub {
+  font-size: 12px;
+  color: var(--texto-suave);
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.kpi__badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+  background: var(--verde-tint);
+  color: var(--verde);
+}
+
+.kpi__badge--negativa {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.kpi__icone {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--raio-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--slate-tint);
+  color: var(--texto-suave);
+}
+
+.kpi__icone--primaria {
+  background: var(--primaria-tint);
+  color: var(--primaria);
+}
+
+.kpi__icone--verde {
+  background: var(--verde-tint);
+  color: var(--verde);
+}
+
+/* ----------------- Filtros (chips) ----------------- */
 
 .filtros {
   display: flex;
@@ -187,153 +440,272 @@ h3 {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
+  gap: 8px;
+  padding: 7px 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
   border-radius: 999px;
-  font-size: 14px;
+  box-shadow: var(--sombra-sm);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto);
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.chip:hover {
+  background: var(--superficie-2);
 }
 
 .chip.ativo {
-  background: var(--cor-primaria);
+  background: var(--primaria);
   color: #fff;
-  border-color: var(--cor-primaria);
+  border-color: var(--primaria);
+}
+
+.chip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
 .chip__contador {
-  background: rgba(15, 23, 42, 0.08);
-  border-radius: 999px;
-  padding: 0 8px;
   font-size: 12px;
+  color: var(--texto-suave);
   font-weight: 600;
 }
 
 .chip.ativo .chip__contador {
-  background: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* ----------------- Cards de veículo ----------------- */
+/* Cores das bolinhas por status */
+.dot--em_preparacao {
+  background: var(--ambar);
+}
+.dot--a_venda {
+  background: var(--verde);
+}
+.dot--reservado {
+  background: var(--violeta);
+}
+.dot--vendido {
+  background: var(--slate);
+}
+
+/* ----------------- Selos de status (badges) ----------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge__ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge--em_preparacao {
+  background: var(--ambar-tint);
+  color: var(--ambar);
+  border-color: var(--ambar-borda);
+}
+.badge--a_venda {
+  background: var(--verde-tint);
+  color: var(--verde);
+  border-color: var(--verde-borda);
+}
+.badge--reservado {
+  background: var(--violeta-tint);
+  color: var(--violeta);
+  border-color: var(--violeta-borda);
+}
+.badge--vendido {
+  background: var(--slate-tint);
+  color: var(--slate);
+  border-color: var(--slate-borda);
+}
+
+/* Selo flutuante sobre a foto */
+.badge--flutuante {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--sombra-sm);
+}
+
+/* ----------------- Cartões de veículo ----------------- */
 
 .grade-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 20px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  background: var(--cor-superficie);
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-lg);
   overflow: hidden;
-  box-shadow: var(--sombra);
+  box-shadow: var(--sombra-sm);
+  transition: box-shadow 0.25s;
+}
+
+.card:hover {
+  box-shadow: var(--sombra-md);
+}
+
+.card__midia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--slate-tint);
 }
 
 .card__foto {
   width: 100%;
-  height: 180px;
+  height: 100%;
   object-fit: cover;
-  background: #e2e8f0;
+  transition: transform 0.5s;
+}
+
+.card:hover .card__foto {
+  transform: scale(1.05);
 }
 
 .card__sem-foto {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 56px;
-  color: #94a3b8;
+  color: var(--texto-faint);
+}
+
+.card__placa-foto {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  color: var(--texto);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  box-shadow: var(--sombra-sm);
 }
 
 .card__corpo {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px;
-}
-
-.card__titulo-linha {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  padding: 16px;
+  flex: 1;
 }
 
 .card__titulo {
-  font-size: 17px;
-}
-
-.card__detalhes {
-  font-size: 14px;
-}
-
-.card__placa {
-  display: inline-block;
-  align-self: flex-start;
-  margin: 0;
-  padding: 2px 8px;
-  border: 1px solid var(--cor-borda);
-  border-radius: 6px;
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 16px;
   font-weight: 600;
 }
 
-.card__precos {
-  display: grid;
-  gap: 4px;
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--cor-borda);
+.card__detalhes {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--texto-suave);
 }
 
-.card__precos > div {
+.card__alerta {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: var(--ambar-tint);
+  color: var(--ambar-texto);
+  border-radius: var(--raio-sm);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.card__alerta svg {
+  color: var(--ambar);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Bloco financeiro dentro do cartão */
+.financeiro {
+  background: var(--superficie-2);
+  border-radius: var(--raio-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financeiro__linha {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  font-size: 14px;
 }
 
-.card__pendencias {
-  margin: 0;
+.financeiro__rotulo {
   font-size: 13px;
-  color: var(--cor-perigo-escura);
+  color: var(--texto-suave);
+}
+
+.financeiro__valor {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.financeiro__custo {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.financeiro__margem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--verde-tint);
+  color: var(--verde);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.financeiro__margem--negativa {
+  background: var(--danger-tint);
+  color: var(--danger);
 }
 
 .card__acoes {
   display: flex;
   gap: 8px;
-  margin-top: 6px;
-}
-
-/* ----------------- Selos e valores ----------------- */
-
-.badge {
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.valor-destaque {
-  font-size: 17px;
-}
-
-.valor-positivo {
-  color: var(--cor-sucesso);
-}
-
-.valor-negativo {
-  color: var(--cor-perigo);
-}
-
-.texto-suave {
-  color: var(--cor-texto-suave);
+  margin-top: auto;
 }
 
 /* ----------------- Estado vazio ----------------- */
@@ -344,10 +716,10 @@ h3 {
   align-items: center;
   gap: 12px;
   padding: 48px 16px;
-  background: var(--cor-superficie);
-  border: 1px dashed var(--cor-borda);
-  border-radius: var(--raio);
-  color: var(--cor-texto-suave);
+  background: var(--superficie);
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio-lg);
+  color: var(--texto-suave);
   text-align: center;
 }
 
@@ -366,18 +738,23 @@ h3 {
   gap: 12px;
 }
 
+.form__cabecalho h2 {
+  font-size: 22px;
+}
+
 .form__secao {
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  background: var(--cor-superficie);
-  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-lg);
+  background: var(--superficie);
+  box-shadow: var(--sombra-sm);
+  padding: 20px;
   margin: 0;
 }
 
 .form__secao legend {
   padding: 0 8px;
   font-weight: 700;
-  color: var(--cor-texto);
+  font-size: 15px;
 }
 
 .form__grade {
@@ -389,53 +766,80 @@ h3 {
 .campo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .campo label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--cor-texto-suave);
+  color: var(--texto-suave);
 }
 
 .campo input,
 .campo select {
-  padding: 10px 12px;
-  border: 1px solid var(--cor-borda);
-  border-radius: var(--raio);
-  font-size: 15px;
-  background: #fff;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-sm);
+  background: var(--superficie);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--texto);
 }
 
 .campo input:focus,
-.campo select:focus,
-.busca:focus {
-  outline: 2px solid var(--cor-primaria);
-  outline-offset: -1px;
-  border-color: var(--cor-primaria);
+.campo select:focus {
+  outline: none;
+  border-color: var(--primaria);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+
+/* Campo de dinheiro com prefixo "R$" */
+.campo-moeda {
+  display: flex;
+  align-items: stretch;
+}
+
+.campo-moeda__prefixo {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borda-forte);
+  border-right: none;
+  border-radius: var(--raio-sm) 0 0 var(--raio-sm);
+  color: var(--texto-suave);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.campo-moeda input {
+  border-radius: 0 var(--raio-sm) var(--raio-sm) 0;
 }
 
 .checkbox {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .checkbox input {
   width: 18px;
   height: 18px;
+  accent-color: var(--primaria);
 }
 
 .aviso-erro {
   margin: 0;
   padding: 12px 14px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--raio);
-  color: var(--cor-perigo-escura);
+  background: var(--danger-tint);
+  border: 1px solid var(--danger-borda);
+  border-radius: var(--raio-sm);
+  color: #b91c1c;
   font-weight: 600;
 }
 
@@ -445,8 +849,7 @@ h3 {
   gap: 12px;
 }
 
-/* ----------------- Fotos ----------------- */
-
+/* Fotos */
 .fotos-grade {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -457,9 +860,9 @@ h3 {
 .foto-item {
   position: relative;
   aspect-ratio: 4 / 3;
-  border-radius: 8px;
+  border-radius: var(--raio-sm);
   overflow: hidden;
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--borda);
 }
 
 .foto-item img {
@@ -485,11 +888,10 @@ h3 {
 }
 
 .foto-item__remover:hover {
-  background: var(--cor-perigo);
+  background: var(--danger);
 }
 
-/* ----------------- Pendências ----------------- */
-
+/* Pendências */
 .pendencias {
   display: flex;
   flex-direction: column;
@@ -501,9 +903,9 @@ h3 {
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--borda);
   border-radius: var(--raio);
-  background: #f8fafc;
+  background: var(--superficie-2);
 }
 
 .pendencia__grade {
@@ -525,7 +927,7 @@ h3 {
 
 .pendencia__dica {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .pendencias__rodape {
@@ -536,25 +938,26 @@ h3 {
   gap: 12px;
 }
 
-/* ----------------- Resumo de custos ----------------- */
-
+/* Resumo de custos no formulário */
 .resumo-custos {
   display: flex;
   flex-wrap: wrap;
-  gap: 24px;
-  padding: 16px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: var(--raio);
+  gap: 32px;
+  padding: 20px;
+  background: var(--verde-tint);
+  border: 1px solid var(--verde-borda);
+  border-radius: var(--raio-lg);
 }
 
 .resumo-custos__item {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .resumo-custos__item strong {
-  font-size: 22px;
+  font-size: 24px;
+  font-weight: 700;
 }
 
 /* ----------------- Vitrine ----------------- */
@@ -562,7 +965,7 @@ h3 {
 .vitrine__aviso {
   padding: 12px 16px;
   margin-bottom: 20px;
-  background: #eff6ff;
+  background: var(--primaria-tint);
   border: 1px solid #bfdbfe;
   border-radius: var(--raio);
   font-size: 14px;
@@ -572,7 +975,7 @@ h3 {
   margin: 4px 0 0;
   font-size: 20px;
   font-weight: 700;
-  color: var(--cor-primaria);
+  color: var(--primaria);
 }
 
 .vitrine-card__observacoes {
@@ -587,13 +990,17 @@ h3 {
 
 /* ----------------- Telas pequenas ----------------- */
 
-@media (max-width: 520px) {
-  .cabecalho__nav {
-    width: 100%;
+@media (max-width: 640px) {
+  .cabecalho__inner,
+  .conteudo__inner,
+  .rodape {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
-  .cabecalho__nav .botao {
-    flex: 1;
+  .cabecalho__acoes {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .form__acoes .botao {

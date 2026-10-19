@@ -5,17 +5,33 @@ import {
   infoStatus,
   calcularCustoTotal,
   calcularLucroEstimado,
+  calcularMargemPercentual,
+  resumoInventario,
 } from '../data/modelos.js'
-import { formatarBRL, formatarNumero } from '../utils/formato.js'
+import { formatarBRL, formatarBRLCompacto, formatarNumero } from '../utils/formato.js'
+import {
+  IconeBusca,
+  IconeEditar,
+  IconeLixeira,
+  IconeAlerta,
+  IconeCarro,
+  IconeCarteira,
+  IconeEtiqueta,
+  IconeTendencia,
+} from './Icones.jsx'
 
-// Tela inicial: lista de veículos com filtro por status e busca por texto.
+// Mostra uma porcentagem no padrão brasileiro. Ex.: 18.7 -> "18,7%"
+function formatarPct(valor) {
+  return valor.toFixed(1).replace('.', ',') + '%'
+}
+
+// Tela inicial: lista de veículos com indicadores, filtro por status e busca.
 export default function VeiculoLista({ onNovo, onEditar }) {
   const [veiculos, setVeiculos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [busca, setBusca] = useState('')
 
-  // Carrega a lista assim que a tela abre.
   useEffect(() => {
     recarregar()
   }, [])
@@ -36,13 +52,12 @@ export default function VeiculoLista({ onNovo, onEditar }) {
     recarregar()
   }
 
-  // Conta quantos veículos existem em cada status (para mostrar nos filtros).
   function contar(statusValor) {
     if (statusValor === 'todos') return veiculos.length
     return veiculos.filter((v) => v.status === statusValor).length
   }
 
-  // Aplica o filtro de status e a busca por texto.
+  // Filtro de status + busca por texto.
   const termo = busca.trim().toLowerCase()
   const filtrados = veiculos.filter((v) => {
     const passaStatus = filtroStatus === 'todos' || v.status === filtroStatus
@@ -54,152 +69,265 @@ export default function VeiculoLista({ onNovo, onEditar }) {
     return passaStatus && passaBusca
   })
 
+  const resumo = resumoInventario(veiculos)
+  const temVeiculos = veiculos.length > 0
+
   return (
     <section>
-      <div className="lista-topo">
-        <h2>Veículos</h2>
-        <input
-          type="search"
-          className="busca"
-          placeholder="Buscar por marca, modelo, cor ou placa…"
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-        />
-      </div>
+      {/* Cabeçalho da tela: título + busca */}
+      <div className="lista-cabecalho">
+        <div>
+          <div className="lista-titulo">
+            <h2>Veículos</h2>
+            {temVeiculos && (
+              <span className="pill-contagem">{resumo.total} no pátio</span>
+            )}
+          </div>
+          <p className="lista-sub">
+            Visão geral do estoque, custo investido e lucro estimado.
+          </p>
+        </div>
 
-      {/* Filtros por status */}
-      <div className="filtros">
-        <button
-          type="button"
-          className={'chip' + (filtroStatus === 'todos' ? ' ativo' : '')}
-          onClick={() => setFiltroStatus('todos')}
-        >
-          Todos <span className="chip__contador">{contar('todos')}</span>
-        </button>
-        {STATUS.map((s) => (
-          <button
-            key={s.valor}
-            type="button"
-            className={'chip' + (filtroStatus === s.valor ? ' ativo' : '')}
-            onClick={() => setFiltroStatus(s.valor)}
-          >
-            {s.rotulo} <span className="chip__contador">{contar(s.valor)}</span>
-          </button>
-        ))}
+        {temVeiculos && (
+          <div className="busca-wrap">
+            <span className="busca-wrap__icone">
+              <IconeBusca size={18} />
+            </span>
+            <input
+              type="search"
+              className="busca"
+              placeholder="Buscar por marca, modelo, cor ou placa…"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       {carregando && <p className="texto-suave">Carregando…</p>}
 
-      {!carregando && filtrados.length === 0 && (
+      {/* Estado vazio: nenhum veículo cadastrado */}
+      {!carregando && !temVeiculos && (
         <div className="vazio">
-          {veiculos.length === 0 ? (
-            <>
-              <p>Nenhum veículo cadastrado ainda.</p>
-              <button type="button" className="botao botao--primario" onClick={onNovo}>
-                + Cadastrar o primeiro veículo
-              </button>
-            </>
-          ) : (
-            <p>Nenhum veículo encontrado para este filtro.</p>
-          )}
+          <p>Nenhum veículo cadastrado ainda.</p>
+          <button type="button" className="botao botao--primario" onClick={onNovo}>
+            Cadastrar o primeiro veículo
+          </button>
         </div>
       )}
 
-      <div className="grade-cards">
-        {filtrados.map((veiculo) => {
-          const status = infoStatus(veiculo.status)
-          const custoTotal = calcularCustoTotal(veiculo)
-          const lucro = calcularLucroEstimado(veiculo)
-          const pendenciasAbertas = (veiculo.pendencias || []).filter(
-            (p) => !p.resolvida,
-          ).length
-          const foto = (veiculo.fotos || [])[0]
-
-          return (
-            <article key={veiculo.id} className="card">
-              {foto ? (
-                <img className="card__foto" src={foto} alt={`${veiculo.marca} ${veiculo.modelo}`} />
-              ) : (
-                <div className="card__foto card__sem-foto" aria-hidden="true">
-                  🚗
-                </div>
-              )}
-
-              <div className="card__corpo">
-                <div className="card__titulo-linha">
-                  <h3 className="card__titulo">
-                    {veiculo.marca || 'Sem marca'} {veiculo.modelo}
-                  </h3>
-                  <span
-                    className="badge"
-                    style={{ backgroundColor: status.cor }}
-                  >
-                    {status.rotulo}
+      {!carregando && temVeiculos && (
+        <>
+          {/* Faixa de indicadores (KPIs) */}
+          <div className="kpis">
+            <div className="kpi">
+              <div className="kpi__texto">
+                <div className="kpi__rotulo">Veículos</div>
+                <div className="kpi__valor">
+                  {resumo.total}
+                  <span className="kpi__sub">
+                    {resumo.emEstoque} em estoque · {resumo.vendidos} vendidos
                   </span>
                 </div>
+              </div>
+              <div className="kpi__icone kpi__icone--primaria">
+                <IconeCarro size={22} />
+              </div>
+            </div>
 
-                <p className="card__detalhes texto-suave">
-                  {[
-                    veiculo.ano,
-                    veiculo.cor,
-                    veiculo.quilometragem !== '' && veiculo.quilometragem != null
-                      ? `${formatarNumero(veiculo.quilometragem)} km`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' • ')}
-                </p>
+            <div className="kpi">
+              <div className="kpi__texto">
+                <div className="kpi__rotulo">Custo em estoque</div>
+                <div className="kpi__valor num">{formatarBRLCompacto(resumo.custoEstoque)}</div>
+              </div>
+              <div className="kpi__icone">
+                <IconeCarteira size={22} />
+              </div>
+            </div>
 
-                {veiculo.placa && (
-                  <p className="card__placa">{veiculo.placa}</p>
-                )}
-
-                <div className="card__precos">
-                  <div>
-                    <span className="texto-suave">Venda</span>
-                    <strong className="valor-destaque">
-                      {formatarBRL(veiculo.precoVenda)}
-                    </strong>
-                  </div>
-                  <div>
-                    <span className="texto-suave">Custo total</span>
-                    <strong>{formatarBRL(custoTotal)}</strong>
-                  </div>
-                  <div>
-                    <span className="texto-suave">Lucro estimado</span>
-                    <strong className={lucro < 0 ? 'valor-negativo' : 'valor-positivo'}>
-                      {formatarBRL(lucro)}
-                    </strong>
-                  </div>
-                </div>
-
-                {pendenciasAbertas > 0 && (
-                  <p className="card__pendencias">
-                    ⚠️ {pendenciasAbertas} pendência(s) em aberto
-                  </p>
-                )}
-
-                <div className="card__acoes">
-                  <button
-                    type="button"
-                    className="botao botao--neutro botao--pequeno"
-                    onClick={() => onEditar(veiculo)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="botao botao--perigo botao--pequeno"
-                    onClick={() => excluir(veiculo)}
-                  >
-                    Excluir
-                  </button>
+            <div className="kpi">
+              <div className="kpi__texto">
+                <div className="kpi__rotulo">Venda estimada</div>
+                <div className="kpi__valor kpi__valor--primaria num">
+                  {formatarBRLCompacto(resumo.vendaEstoque)}
                 </div>
               </div>
-            </article>
-          )
-        })}
-      </div>
+              <div className="kpi__icone kpi__icone--primaria">
+                <IconeEtiqueta size={22} />
+              </div>
+            </div>
+
+            <div className="kpi">
+              <div className="kpi__texto">
+                <div className="kpi__rotulo">Lucro estimado</div>
+                <div className="kpi__valor kpi__valor--verde num">
+                  {formatarBRLCompacto(resumo.lucroEstoque)}
+                  {resumo.custoEstoque > 0 && (
+                    <span
+                      className={
+                        'kpi__badge' +
+                        (resumo.lucroEstoque < 0 ? ' kpi__badge--negativa' : '')
+                      }
+                    >
+                      {resumo.lucroEstoque > 0 ? '+' : ''}
+                      {formatarPct(resumo.margem)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="kpi__icone kpi__icone--verde">
+                <IconeTendencia size={22} />
+              </div>
+            </div>
+          </div>
+
+          {/* Filtros por status */}
+          <div className="filtros">
+            <button
+              type="button"
+              className={'chip' + (filtroStatus === 'todos' ? ' ativo' : '')}
+              onClick={() => setFiltroStatus('todos')}
+            >
+              <span>Todos</span>
+              <span className="chip__contador">{contar('todos')}</span>
+            </button>
+            {STATUS.map((s) => (
+              <button
+                key={s.valor}
+                type="button"
+                className={'chip' + (filtroStatus === s.valor ? ' ativo' : '')}
+                onClick={() => setFiltroStatus(s.valor)}
+              >
+                <span className={'chip__dot dot--' + s.valor}></span>
+                <span>{s.rotulo}</span>
+                <span className="chip__contador">({contar(s.valor)})</span>
+              </button>
+            ))}
+          </div>
+
+          {filtrados.length === 0 && (
+            <div className="vazio">
+              <p>Nenhum veículo encontrado para este filtro.</p>
+            </div>
+          )}
+
+          {/* Grade de cartões */}
+          <div className="grade-cards">
+            {filtrados.map((veiculo) => {
+              const status = infoStatus(veiculo.status)
+              const custoTotal = calcularCustoTotal(veiculo)
+              const lucro = calcularLucroEstimado(veiculo)
+              const margem = calcularMargemPercentual(veiculo)
+              const abertas = (veiculo.pendencias || []).filter((p) => !p.resolvida)
+              const descricoes = abertas.map((p) => p.descricao).filter(Boolean)
+              const foto = (veiculo.fotos || [])[0]
+
+              const detalhes = [
+                veiculo.ano,
+                veiculo.cor,
+                veiculo.quilometragem !== '' && veiculo.quilometragem != null
+                  ? `${formatarNumero(veiculo.quilometragem)} km`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' • ')
+
+              return (
+                <article key={veiculo.id} className="card">
+                  <div className="card__midia">
+                    {foto ? (
+                      <img
+                        className="card__foto"
+                        src={foto}
+                        alt={`${veiculo.marca} ${veiculo.modelo}`}
+                      />
+                    ) : (
+                      <div className="card__foto card__sem-foto">
+                        <IconeCarro size={48} />
+                      </div>
+                    )}
+                    <span className={`badge badge--flutuante badge--${veiculo.status}`}>
+                      <span className="badge__ponto"></span>
+                      {status.rotulo}
+                    </span>
+                    {veiculo.placa && (
+                      <span className="card__placa-foto">{veiculo.placa}</span>
+                    )}
+                  </div>
+
+                  <div className="card__corpo">
+                    <div>
+                      <h3 className="card__titulo">
+                        {veiculo.marca || 'Sem marca'} {veiculo.modelo}
+                      </h3>
+                      {detalhes && <p className="card__detalhes">{detalhes}</p>}
+                    </div>
+
+                    {abertas.length > 0 && (
+                      <div className="card__alerta">
+                        <IconeAlerta size={16} />
+                        <span>
+                          {abertas.length} pendência{abertas.length > 1 ? 's' : ''}
+                          {descricoes.length > 0
+                            ? ': ' + descricoes.join(', ')
+                            : ' em aberto'}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="financeiro">
+                      <div className="financeiro__linha">
+                        <span className="financeiro__rotulo">Preço de venda</span>
+                        <span className="financeiro__valor num">
+                          {formatarBRL(veiculo.precoVenda)}
+                        </span>
+                      </div>
+                      <div className="financeiro__linha">
+                        <span className="financeiro__custo">Custo total</span>
+                        <span className="financeiro__custo num">
+                          {formatarBRL(custoTotal)}
+                        </span>
+                      </div>
+                      <div
+                        className={
+                          'financeiro__margem' +
+                          (lucro < 0 ? ' financeiro__margem--negativa' : '')
+                        }
+                      >
+                        <span>Lucro estimado</span>
+                        <span className="num">
+                          {lucro > 0 ? '+' : ''}
+                          {formatarBRL(lucro)}
+                          {custoTotal > 0 ? ` (${formatarPct(margem)})` : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="card__acoes">
+                      <button
+                        type="button"
+                        className="botao botao--neutro botao--pequeno"
+                        onClick={() => onEditar(veiculo)}
+                      >
+                        <IconeEditar size={16} />
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="botao botao--perigo botao--pequeno"
+                        onClick={() => excluir(veiculo)}
+                      >
+                        <IconeLixeira size={16} />
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </>
+      )}
     </section>
   )
 }

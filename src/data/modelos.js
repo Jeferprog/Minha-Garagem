@@ -67,3 +67,33 @@ export function calcularLucroEstimado(veiculo) {
   const venda = Number(veiculo.precoVenda) || 0
   return venda - calcularCustoTotal(veiculo)
 }
+
+// Margem em porcentagem = lucro / custo total * 100. Zero se não houver custo.
+export function calcularMargemPercentual(veiculo) {
+  const custo = calcularCustoTotal(veiculo)
+  if (custo <= 0) return 0
+  return (calcularLucroEstimado(veiculo) / custo) * 100
+}
+
+// Resumo geral do inventário, usado na faixa de indicadores (KPIs).
+// Considera "em estoque" tudo que ainda não foi vendido.
+export function resumoInventario(veiculos) {
+  const lista = veiculos || []
+  const emEstoque = lista.filter((v) => v.status !== 'vendido')
+  const vendidos = lista.filter((v) => v.status === 'vendido')
+
+  const custoEstoque = emEstoque.reduce((t, v) => t + calcularCustoTotal(v), 0)
+  const vendaEstoque = emEstoque.reduce((t, v) => t + (Number(v.precoVenda) || 0), 0)
+  const lucroEstoque = vendaEstoque - custoEstoque
+  const margem = custoEstoque > 0 ? (lucroEstoque / custoEstoque) * 100 : 0
+
+  return {
+    total: lista.length,
+    emEstoque: emEstoque.length,
+    vendidos: vendidos.length,
+    custoEstoque,
+    vendaEstoque,
+    lucroEstoque,
+    margem,
+  }
+}

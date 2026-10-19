@@ -6,6 +6,17 @@ export function formatarBRL(valor) {
   return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+// Como formatarBRL, mas sem os centavos. Útil para somas grandes (KPIs).
+// Ex.: 2450000 -> "R$ 2.450.000"
+export function formatarBRLCompacto(valor) {
+  const numero = Number(valor) || 0
+  return numero.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    maximumFractionDigits: 0,
+  })
+}
+
 // Mostra um número com separador de milhar. Ex.: 48000 -> "48.000"
 export function formatarNumero(valor) {
   const numero = Number(valor) || 0
