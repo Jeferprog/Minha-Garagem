@@ -18,6 +18,7 @@ create table if not exists public.veiculos (
   cor text,
   placa text,
   quilometragem numeric,
+  "estoqueDesde" date,
   "precoCompra" numeric,
   "precoVenda" numeric,
   "mostrarPrecoNoSite" boolean default true,
@@ -27,6 +28,9 @@ create table if not exists public.veiculos (
   "criadoEm" timestamptz default now(),
   "atualizadoEm" timestamptz default now()
 );
+
+-- Garante a coluna "No estoque desde" em bancos criados antes dela
+alter table public.veiculos add column if not exists "estoqueDesde" date;
 
 -- Tabela de configurações (uma linha só, id = 1)
 create table if not exists public.config (
