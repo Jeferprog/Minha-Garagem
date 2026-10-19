@@ -1114,6 +1114,153 @@ h3 {
   font-size: 14px;
 }
 
+/* ----------------- Tempo em estoque (cartão admin) ----------------- */
+
+.card__estoque {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+
+.card__estoque svg {
+  color: var(--texto-faint);
+}
+
+/* ----------------- Contato / WhatsApp (vitrine) ----------------- */
+
+.card__contato {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card__cta {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.botao--whatsapp {
+  background: #25d366;
+  color: #fff;
+  text-decoration: none;
+}
+
+.botao--whatsapp:hover {
+  background: #1da851;
+}
+
+.card__whatsapp-dica {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+
+/* ----------------- Configurações ----------------- */
+
+.campo__ajuda {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+.texto-salvo {
+  align-self: center;
+  color: var(--verde);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ----------------- Lightbox (foto ampliada) ----------------- */
+
+.galeria__foto {
+  cursor: zoom-in;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.lightbox__img {
+  max-width: 92vw;
+  max-height: 86vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox__fechar {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox__fechar:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.lightbox__seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox__seta:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.lightbox__seta--esq {
+  left: 16px;
+}
+
+.lightbox__seta--dir {
+  right: 16px;
+}
+
+.lightbox__contador {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
 /* ----------------- Telas pequenas ----------------- */
 
 @media (max-width: 640px) {

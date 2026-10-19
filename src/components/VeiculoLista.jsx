@@ -4,6 +4,7 @@ import {
   STATUS,
   infoStatus,
   formatarAno,
+  textoEmEstoque,
   calcularCustoTotal,
   calcularLucroEstimado,
   calcularMargemPercentual,
@@ -19,6 +20,7 @@ import {
   IconeCarteira,
   IconeEtiqueta,
   IconeTendencia,
+  IconeRelogio,
 } from './Icones.jsx'
 
 // Mostra uma porcentagem no padrão brasileiro. Ex.: 18.7 -> "18,7%"
@@ -222,6 +224,8 @@ export default function VeiculoLista({ onNovo, onEditar }) {
               const abertas = (veiculo.pendencias || []).filter((p) => !p.resolvida)
               const descricoes = abertas.map((p) => p.descricao).filter(Boolean)
               const foto = (veiculo.fotos || [])[0]
+              const estoqueTexto =
+                veiculo.status !== 'vendido' ? textoEmEstoque(veiculo) : ''
 
               const detalhes = [
                 formatarAno(veiculo),
@@ -262,6 +266,12 @@ export default function VeiculoLista({ onNovo, onEditar }) {
                         {veiculo.marca || 'Sem marca'} {veiculo.modelo}
                       </h3>
                       {detalhes && <p className="card__detalhes">{detalhes}</p>}
+                      {estoqueTexto && (
+                        <p className="card__estoque">
+                          <IconeRelogio size={14} />
+                          {estoqueTexto}
+                        </p>
+                      )}
                     </div>
 
                     {abertas.length > 0 && (

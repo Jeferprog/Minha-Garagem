@@ -3,6 +3,7 @@ import VeiculoLista from './components/VeiculoLista.jsx'
 import VeiculoForm from './components/VeiculoForm.jsx'
 import Vitrine from './components/Vitrine.jsx'
 import Login from './components/Login.jsx'
+import Configuracoes from './components/Configuracoes.jsx'
 import { IconeCarro, IconeMais } from './components/Icones.jsx'
 import { estaAutenticado, autenticar, sair } from './auth.js'
 
@@ -86,6 +87,13 @@ export default function App() {
                   >
                     Vitrine
                   </button>
+                  <button
+                    type="button"
+                    className={'nav__link' + (tela === 'config' ? ' ativo' : '')}
+                    onClick={() => setTela('config')}
+                  >
+                    Configurações
+                  </button>
                 </nav>
                 <button type="button" className="botao botao--primario" onClick={abrirNovo}>
                   <IconeMais size={18} />
@@ -121,6 +129,7 @@ export default function App() {
               onCancelar={voltarParaLista}
             />
           )}
+          {autenticado && tela === 'config' && <Configuracoes />}
         </div>
       </main>
 

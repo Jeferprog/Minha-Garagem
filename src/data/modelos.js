@@ -87,6 +87,26 @@ export function calcularMargemPercentual(veiculo) {
   return (calcularLucroEstimado(veiculo) / custo) * 100
 }
 
+// Quantos dias o veículo está em estoque, contando a partir do cadastro
+// (criadoEm). Devolve null se a data não existir.
+export function diasEmEstoque(veiculo) {
+  if (!veiculo.criadoEm) return null
+  const inicio = new Date(veiculo.criadoEm)
+  if (isNaN(inicio.getTime())) return null
+  const ms = Date.now() - inicio.getTime()
+  return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)))
+}
+
+// Texto amigável do tempo em estoque. Ex.: "Cadastrado hoje", "há 1 dia",
+// "há 12 dias em estoque".
+export function textoEmEstoque(veiculo) {
+  const dias = diasEmEstoque(veiculo)
+  if (dias == null) return ''
+  if (dias === 0) return 'Cadastrado hoje'
+  if (dias === 1) return 'Há 1 dia em estoque'
+  return `Há ${dias} dias em estoque`
+}
+
 // Resumo geral do inventário, usado na faixa de indicadores (KPIs).
 // Considera "em estoque" tudo que ainda não foi vendido.
 export function resumoInventario(veiculos) {

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { listarVeiculos } from '../data/repository.js'
+import { listarVeiculos, obterConfig } from '../data/repository.js'
 import { infoStatus, formatarAno } from '../data/modelos.js'
 import { formatarBRL, formatarNumero } from '../utils/formato.js'
+import { linkWhatsApp } from '../utils/whatsapp.js'
 import { VEICULOS_EXEMPLO } from '../data/exemplos.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
+import { IconeWhatsapp } from './Icones.jsx'
 
 // Vitrine pública. Mostra os veículos "à venda" ou "reservado".
 // Quando não há nenhum, exibe veículos de exemplo (ilustração) para dar
@@ -11,11 +13,13 @@ import GaleriaFotos from './GaleriaFotos.jsx'
 // prévia (só aparece para o administrador).
 export default function Vitrine({ admin = false }) {
   const [veiculos, setVeiculos] = useState([])
+  const [whatsapp, setWhatsapp] = useState('')
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    listarVeiculos().then((lista) => {
+    Promise.all([listarVeiculos(), obterConfig()]).then(([lista, config]) => {
       setVeiculos(lista)
+      setWhatsapp(config.whatsapp || '')
       setCarregando(false)
     })
   }, [])
@@ -53,8 +57,9 @@ export default function Vitrine({ admin = false }) {
             (p) => p.mostrarNoSite,
           )
 
+          const anoTxt = formatarAno(veiculo)
           const detalhes = [
-            formatarAno(veiculo),
+            anoTxt,
             veiculo.cor,
             veiculo.quilometragem !== '' && veiculo.quilometragem != null
               ? `${formatarNumero(veiculo.quilometragem)} km`
@@ -62,6 +67,11 @@ export default function Vitrine({ admin = false }) {
           ]
             .filter(Boolean)
             .join(' • ')
+
+          const mensagem =
+            `Olá! Tenho interesse no ${veiculo.marca} ${veiculo.modelo}` +
+            `${anoTxt ? ` (${anoTxt})` : ''}. Vi no site de vocês.`
+          const urlWhatsApp = linkWhatsApp(whatsapp, mensagem)
 
           return (
             <article key={veiculo.id} className="card">
@@ -101,6 +111,28 @@ export default function Vitrine({ admin = false }) {
                       ))}
                     </ul>
                   </div>
+                )}
+
+                {urlWhatsApp ? (
+                  <div className="card__contato">
+                    <p className="card__cta">Ficou interessado? Nos contate!</p>
+                    <a
+                      className="botao botao--whatsapp"
+                      href={urlWhatsApp}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <IconeWhatsapp size={18} />
+                      Falar no WhatsApp
+                    </a>
+                  </div>
+                ) : (
+                  admin && (
+                    <p className="card__whatsapp-dica texto-suave">
+                      Configure o número em “Configurações” para ativar o botão
+                      de WhatsApp.
+                    </p>
+                  )
                 )}
               </div>
             </article>

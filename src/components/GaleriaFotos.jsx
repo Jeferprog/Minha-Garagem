@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { IconeCarro } from './Icones.jsx'
+import Lightbox from './Lightbox.jsx'
 
 // Galeria de fotos de um veículo (usada na vitrine).
 // Mostra a foto atual; quando há mais de uma, aparecem as setas, um
-// contador (ex.: 2/4) e as miniaturas para ver todas as fotos.
-// "children" é um conteúdo sobreposto à foto (ex.: o selo de status).
+// contador (ex.: 2/4) e as miniaturas. Clicar na foto abre o visualizador
+// em tela cheia (lightbox). "children" é um conteúdo sobreposto à foto
+// (ex.: o selo de status).
 export default function GaleriaFotos({ fotos, alt, children }) {
   const lista = fotos || []
   const [indice, setIndice] = useState(0)
+  const [verLightbox, setVerLightbox] = useState(false)
 
   // Sem fotos: mostra o ícone de carro (placeholder).
   if (lista.length === 0) {
@@ -26,13 +29,19 @@ export default function GaleriaFotos({ fotos, alt, children }) {
 
   function ir(delta, evento) {
     evento.preventDefault()
+    evento.stopPropagation()
     setIndice((atual + delta + lista.length) % lista.length)
   }
 
   return (
     <div>
       <div className="card__midia">
-        <img className="card__foto" src={lista[atual]} alt={alt} />
+        <img
+          className="card__foto galeria__foto"
+          src={lista[atual]}
+          alt={alt}
+          onClick={() => setVerLightbox(true)}
+        />
         {children}
         {varias && (
           <>
@@ -73,6 +82,15 @@ export default function GaleriaFotos({ fotos, alt, children }) {
             </button>
           ))}
         </div>
+      )}
+
+      {verLightbox && (
+        <Lightbox
+          fotos={lista}
+          inicial={atual}
+          alt={alt}
+          onFechar={() => setVerLightbox(false)}
+        />
       )}
     </div>
   )
