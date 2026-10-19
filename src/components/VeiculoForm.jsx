@@ -16,6 +16,10 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     if (veiculoInicial) {
       return {
         ...veiculoInicial,
+        // Veículos antigos podem não ter esses campos; usamos '' como padrão
+        // para que os inputs continuem "controlados".
+        ano: veiculoInicial.ano ?? '',
+        anoModelo: veiculoInicial.anoModelo ?? '',
         fotos: [...(veiculoInicial.fotos || [])],
         pendencias: (veiculoInicial.pendencias || []).map((p) => ({ ...p })),
       }
@@ -63,6 +67,7 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     return {
       ...v,
       ano: v.ano === '' || v.ano == null ? null : Number(v.ano),
+      anoModelo: v.anoModelo === '' || v.anoModelo == null ? null : Number(v.anoModelo),
       quilometragem: paraNumero(v.quilometragem),
       precoCompra: paraNumero(v.precoCompra),
       precoVenda: paraNumero(v.precoVenda),
@@ -130,12 +135,21 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
             />
           </div>
           <div className="campo">
-            <label>Ano</label>
+            <label>Ano fabricação</label>
             <input
               type="number"
               value={veiculo.ano}
               onChange={(e) => atualizar('ano', e.target.value)}
-              placeholder="Ex.: 2018"
+              placeholder="Ex.: 2022"
+            />
+          </div>
+          <div className="campo">
+            <label>Ano modelo</label>
+            <input
+              type="number"
+              value={veiculo.anoModelo}
+              onChange={(e) => atualizar('anoModelo', e.target.value)}
+              placeholder="Ex.: 2023"
             />
           </div>
           <div className="campo">

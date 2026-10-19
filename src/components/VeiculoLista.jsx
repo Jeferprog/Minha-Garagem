@@ -3,6 +3,7 @@ import { listarVeiculos, removerVeiculo } from '../data/repository.js'
 import {
   STATUS,
   infoStatus,
+  formatarAno,
   calcularCustoTotal,
   calcularLucroEstimado,
   calcularMargemPercentual,
@@ -223,7 +224,7 @@ export default function VeiculoLista({ onNovo, onEditar }) {
               const foto = (veiculo.fotos || [])[0]
 
               const detalhes = [
-                veiculo.ano,
+                formatarAno(veiculo),
                 veiculo.cor,
                 veiculo.quilometragem !== '' && veiculo.quilometragem != null
                   ? `${formatarNumero(veiculo.quilometragem)} km`

@@ -18,6 +18,17 @@ export function infoStatus(valor) {
   return STATUS.find((s) => s.valor === valor) || STATUS[0]
 }
 
+// Texto do ano para exibição: "2022/2023" (fabricação/modelo), ou só um
+// deles quando o outro não foi informado.
+export function formatarAno(veiculo) {
+  const temFab = veiculo.ano !== '' && veiculo.ano != null
+  const temMod = veiculo.anoModelo !== '' && veiculo.anoModelo != null
+  if (temFab && temMod) return `${veiculo.ano}/${veiculo.anoModelo}`
+  if (temFab) return String(veiculo.ano)
+  if (temMod) return String(veiculo.anoModelo)
+  return ''
+}
+
 // Cria um veículo "em branco" para o formulário de cadastro.
 export function novoVeiculo() {
   return {
@@ -25,6 +36,7 @@ export function novoVeiculo() {
     marca: '',
     modelo: '',
     ano: '',
+    anoModelo: '',
     cor: '',
     placa: '',
     quilometragem: '',
