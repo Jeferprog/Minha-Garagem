@@ -115,6 +115,21 @@ exatamente como o Supabase trabalha.
 
 ---
 
+## Vitrine pública e senha da administração
+
+- A **Vitrine** é pública: qualquer pessoa que abrir o site vê os veículos
+  "à venda" e "reservados".
+- As **demais telas** (lista de veículos, cadastro e edição) são da
+  administração e pedem **senha**. A senha atual é: **`garagem2024`**.
+- Para **trocar a senha**, altere o valor de `SENHA_ADMIN` no arquivo
+  `src/auth.js` e publique o site de novo (ou peça para o Claude trocar).
+
+> ⚠️ Como o site é estático, essa senha é uma **trava leve**: impede o acesso
+> casual, mas não é segurança forte. Login de verdade e uma vitrine pública
+> que todos os clientes enxergam (de qualquer dispositivo) virão com o
+> **Supabase**. Enquanto isso, a vitrine mostra alguns **veículos de exemplo**
+> quando ainda não há veículos reais à venda/reservados cadastrados.
+
 ## Observações importantes
 
 - Os dados ficam salvos **neste navegador, neste computador**. Se abrir em

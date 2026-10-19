@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { listarVeiculos } from '../data/repository.js'
 import { infoStatus, formatarAno } from '../data/modelos.js'
 import { formatarBRL, formatarNumero } from '../utils/formato.js'
+import { VEICULOS_EXEMPLO } from '../data/exemplos.js'
 import GaleriaFotos from './GaleriaFotos.jsx'
 
-// Prévia de como os veículos apareceriam no site público (vitrine).
-// Mostra apenas os veículos "à venda" ou "reservado" e respeita as
-// opções "mostrar preço no site" e "mostrar no site" de cada pendência.
-export default function Vitrine() {
+// Vitrine pública. Mostra os veículos "à venda" ou "reservado".
+// Quando não há nenhum, exibe veículos de exemplo (ilustração) para dar
+// uma ideia de como a vitrine fica. A prop "admin" controla o aviso de
+// prévia (só aparece para o administrador).
+export default function Vitrine({ admin = false }) {
   const [veiculos, setVeiculos] = useState([])
   const [carregando, setCarregando] = useState(true)
 
@@ -21,25 +23,31 @@ export default function Vitrine() {
   const visiveis = veiculos.filter(
     (v) => v.status === 'a_venda' || v.status === 'reservado',
   )
+  const usandoExemplos = !carregando && visiveis.length === 0
+  const paraMostrar = usandoExemplos ? VEICULOS_EXEMPLO : visiveis
 
   return (
     <section className="vitrine">
-      <div className="vitrine__aviso">
-        👁️ Prévia da vitrine. É assim que os veículos apareceriam no site
-        público. Aparecem apenas os que estão <strong>à venda</strong> ou{' '}
-        <strong>reservados</strong>.
-      </div>
+      {admin && (
+        <div className="vitrine__aviso">
+          👁️ Prévia da vitrine. É assim que os veículos apareceriam no site
+          público. Aparecem apenas os que estão <strong>à venda</strong> ou{' '}
+          <strong>reservados</strong>.
+        </div>
+      )}
 
       {carregando && <p className="texto-suave">Carregando…</p>}
 
-      {!carregando && visiveis.length === 0 && (
-        <div className="vazio">
-          <p>Nenhum veículo à venda ou reservado no momento.</p>
+      {usandoExemplos && (
+        <div className="vitrine__exemplos">
+          🚗 Veículos de <strong>exemplo</strong> (ilustração), só para mostrar
+          como a vitrine fica. Eles somem assim que você cadastrar veículos
+          reais com status <strong>à venda</strong> ou <strong>reservado</strong>.
         </div>
       )}
 
       <div className="grade-cards">
-        {visiveis.map((veiculo) => {
+        {paraMostrar.map((veiculo) => {
           const status = infoStatus(veiculo.status)
           const pendenciasVisiveis = (veiculo.pendencias || []).filter(
             (p) => p.mostrarNoSite,
