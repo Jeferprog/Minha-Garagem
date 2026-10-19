@@ -1,0 +1,14 @@
+# Dependências
+node_modules
+
+# Build gerado pelo Vite
+dist
+
+# Arquivos de ambiente e do sistema
+*.local
+.env
+.env.*
+.DS_Store
+
+# Logs
+npm-debug.log*
