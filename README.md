@@ -5,9 +5,9 @@ cadastro, fotos, pendências/avarias, cálculo de custo e uma prévia da
 vitrine (como os carros apareceriam num site público).
 
 Feito com **React + Vite**, pensado para ser **simples de manter**.
-Por enquanto os dados ficam salvos **no próprio navegador** (localStorage);
-no futuro dá para trocar por um banco de dados online (Supabase) **sem
-mexer nas telas** — veja a seção "Trocar para o Supabase" mais abaixo.
+Os dados ficam salvos **online no Supabase** — por isso aparecem em
+qualquer dispositivo e a vitrine é realmente pública. Veja a seção
+"Banco de dados (Supabase)" para a configuração.
 
 ---
 
@@ -76,7 +76,7 @@ O endereço do site será:
 ```
 src/
 ├─ data/
-│  ├─ repository.js   ← ÚNICO lugar que acessa os dados (localStorage hoje)
+│  ├─ repository.js   ← ÚNICO lugar que acessa os dados (Supabase)
 │  └─ modelos.js      ← o que é um veículo/pendência + cálculo de custo
 ├─ utils/
 │  └─ formato.js      ← formatar dinheiro, gerar id, reduzir fotos
@@ -95,48 +95,44 @@ arquivo `src/index.css`.
 
 ---
 
-## Trocar para o Supabase depois (sem mexer nas telas)
+## Banco de dados (Supabase)
 
-Todo o acesso a dados está isolado em **um único arquivo**:
-`src/data/repository.js`.
+Os dados ficam no **Supabase** (banco de dados online). Todo o acesso a
+dados está isolado em `src/data/repository.js`, e a conexão fica em
+`src/supabase.js` (endereço e chave **pública** do projeto — pode ficar no
+código, a segurança vem das regras do banco e do login).
 
-As telas só conhecem estas quatro funções:
+**Configuração inicial (uma vez só), no painel do Supabase:**
 
-- `listarVeiculos()`
-- `obterVeiculo(id)`
-- `salvarVeiculo(veiculo)`
-- `removerVeiculo(id)`
+1. **SQL Editor → New query** → cole o conteúdo de `supabase/schema.sql`
+   e clique em **Run**. Isso cria as tabelas e as regras de segurança.
+2. **Authentication → Users → Add user** → crie seu usuário de
+   administrador (e-mail + senha) e marque **Auto Confirm User**.
+3. **Authentication → Providers → Email** → desligue
+   **"Allow new users to sign up"** (assim só você tem acesso de admin).
 
-Quando quiser usar o Supabase, basta **reescrever o interior dessas
-funções** para ler/gravar no Supabase, mantendo os mesmos nomes e o mesmo
-comportamento (o que entra e o que sai). As telas continuam funcionando sem
-nenhuma alteração. As funções já são assíncronas (usam `Promise`), que é
-exatamente como o Supabase trabalha.
+As regras de segurança (RLS) deixam **qualquer pessoa ver** a vitrine,
+mas só o **administrador logado** cadastrar/editar/excluir.
 
 ---
 
-## Vitrine pública e senha da administração
+## Vitrine pública e administração
 
 - A **Vitrine** é pública: qualquer pessoa que abrir o site vê os veículos
   "à venda" e "reservados".
-- As **demais telas** (lista de veículos, cadastro e edição) são da
-  administração e pedem **senha**. A senha atual é: **`garagem2024`**.
-- Para **trocar a senha**, altere o valor de `SENHA_ADMIN` no arquivo
-  `src/auth.js` e publique o site de novo (ou peça para o Claude trocar).
+- As **demais telas** (lista, cadastro/edição e configurações) são da
+  administração e pedem **login** (e-mail e senha do Supabase). É só clicar
+  em **Administração** e entrar com o usuário criado no painel do Supabase.
 - Na aba **Configurações** (dentro da administração) você define o
   **número de WhatsApp** que recebe os contatos vindos da vitrine.
-
-> ⚠️ Como o site é estático, essa senha é uma **trava leve**: impede o acesso
-> casual, mas não é segurança forte. Login de verdade e uma vitrine pública
-> que todos os clientes enxergam (de qualquer dispositivo) virão com o
-> **Supabase**. Enquanto isso, a vitrine mostra alguns **veículos de exemplo**
-> quando ainda não há veículos reais à venda/reservados cadastrados.
+- Quando ainda não há veículos à venda/reservados, a vitrine mostra alguns
+  **veículos de exemplo** (ilustração) só para dar ideia de como fica.
 
 ## Observações importantes
 
-- Os dados ficam salvos **neste navegador, neste computador**. Se abrir em
-  outro computador ou limpar os dados do navegador, a lista aparece vazia.
-  Isso muda quando migrarmos para o Supabase.
-- As fotos são guardadas junto com os dados do navegador, que tem espaço
-  limitado. Por isso elas são reduzidas automaticamente ao serem adicionadas.
-  Use poucas fotos por veículo enquanto estivermos no localStorage.
+- Os dados ficam salvos **online no Supabase**, então aparecem em qualquer
+  computador ou celular. A vitrine é pública e o cadastro é só do admin.
+- As fotos são reduzidas automaticamente ao serem adicionadas (para não
+  pesar) e hoje ficam guardadas junto com os dados do veículo. Se um dia o
+  volume de fotos crescer muito, dá para movê-las para o "Storage" do
+  Supabase (armazenamento próprio para imagens) — é só pedir.

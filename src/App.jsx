@@ -1,32 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import VeiculoLista from './components/VeiculoLista.jsx'
 import VeiculoForm from './components/VeiculoForm.jsx'
 import Vitrine from './components/Vitrine.jsx'
 import Login from './components/Login.jsx'
 import Configuracoes from './components/Configuracoes.jsx'
 import { IconeCarro, IconeMais } from './components/Icones.jsx'
-import { estaAutenticado, autenticar, sair } from './auth.js'
+import { entrar, sair, obterSessao, observarSessao } from './auth.js'
 
 // Componente principal.
 // - A VITRINE é pública (qualquer pessoa vê).
-// - As demais telas (lista de veículos, cadastro/edição) são da
-//   administração e exigem senha.
+// - As demais telas (lista, cadastro/edição, configurações) são da
+//   administração e exigem login (e-mail e senha) pelo Supabase.
 export default function App() {
-  const [autenticado, setAutenticado] = useState(() => estaAutenticado())
-  const [tela, setTela] = useState('vitrine') // 'vitrine' | 'lista' | 'form'
+  const [sessao, setSessao] = useState(null)
+  const [carregandoSessao, setCarregandoSessao] = useState(true)
+  const [tela, setTela] = useState('vitrine') // 'vitrine' | 'lista' | 'form' | 'config'
   const [veiculoEditando, setVeiculoEditando] = useState(null)
   const [telaLogin, setTelaLogin] = useState(false)
 
-  function entrar() {
-    autenticar()
-    setAutenticado(true)
+  const autenticado = !!sessao
+
+  // Verifica se já existe alguém logado e fica de olho em mudanças de login.
+  useEffect(() => {
+    obterSessao().then((s) => {
+      setSessao(s)
+      setCarregandoSessao(false)
+    })
+    const parar = observarSessao((s) => setSessao(s))
+    return parar
+  }, [])
+
+  async function fazerLogin(email, senha) {
+    const novaSessao = await entrar(email, senha) // lança erro se falhar
+    setSessao(novaSessao)
     setTelaLogin(false)
     setTela('lista')
   }
 
-  function sairAdmin() {
-    sair()
-    setAutenticado(false)
+  async function sairAdmin() {
+    await sair()
+    setSessao(null)
     setTela('vitrine')
   }
 
@@ -45,9 +58,18 @@ export default function App() {
     setTela('lista')
   }
 
+  // Enquanto verifica se há login salvo, mostra um aviso curto.
+  if (carregandoSessao) {
+    return (
+      <div className="login">
+        <p className="texto-suave">Carregando…</p>
+      </div>
+    )
+  }
+
   // Tela de login (quando o visitante clica em "Administração").
   if (!autenticado && telaLogin) {
-    return <Login onEntrar={entrar} onVoltar={() => setTelaLogin(false)} />
+    return <Login onEntrar={fazerLogin} onVoltar={() => setTelaLogin(false)} />
   }
 
   // Mostra a vitrine quando não está logado, ou quando o admin escolhe a aba.
@@ -135,7 +157,7 @@ export default function App() {
 
       <footer className="rodape">
         {autenticado
-          ? 'Os dados ficam salvos neste navegador. Para uso em vários computadores, depois trocamos para um banco de dados online (Supabase).'
+          ? 'Dados salvos online no Supabase — aparecem em qualquer dispositivo.'
           : 'Minha Garagem — revenda de veículos.'}
       </footer>
     </div>

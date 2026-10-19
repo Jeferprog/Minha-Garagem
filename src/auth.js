@@ -1,42 +1,36 @@
-// Controle de acesso simples ("trava leve") da área de administração.
-//
-// IMPORTANTE: como o site é estático (GitHub Pages), esta senha é apenas
-// uma proteção LEVE — suficiente para impedir o acesso casual de quem abrir
-// a vitrine, mas NÃO é segurança forte (alguém com conhecimento técnico
-// conseguiria contornar). O login de verdade virá com o Supabase.
-//
-// Para TROCAR A SENHA: altere o texto entre aspas em SENHA_ADMIN abaixo e
-// publique o site novamente (ou peça para o Claude trocar).
-export const SENHA_ADMIN = 'garagem2024'
+// Login de administrador usando o Supabase (login de verdade, com
+// e-mail e senha). A vitrine continua pública; só o administrador
+// logado consegue cadastrar/editar/excluir veículos.
 
-// Enquanto a aba do navegador estiver aberta, o administrador continua
-// logado. Ao fechar a aba, é preciso entrar com a senha de novo.
-const CHAVE = 'minha-garagem:admin'
+import { supabase } from './supabase.js'
 
-export function verificarSenha(senha) {
-  return senha === SENHA_ADMIN
+// Entra com e-mail e senha. Devolve a sessão ou lança erro.
+export async function entrar(email, senha) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password: senha,
+  })
+  if (error) {
+    throw new Error('E-mail ou senha incorretos.')
+  }
+  return data.session
 }
 
-export function estaAutenticado() {
-  try {
-    return sessionStorage.getItem(CHAVE) === '1'
-  } catch {
-    return false
-  }
+export async function sair() {
+  await supabase.auth.signOut()
 }
 
-export function autenticar() {
-  try {
-    sessionStorage.setItem(CHAVE, '1')
-  } catch {
-    /* ignora navegadores que bloqueiam o armazenamento */
-  }
+// Sessão atual (ou null se ninguém está logado).
+export async function obterSessao() {
+  const { data } = await supabase.auth.getSession()
+  return data.session
 }
 
-export function sair() {
-  try {
-    sessionStorage.removeItem(CHAVE)
-  } catch {
-    /* ignora */
-  }
+// Chama "callback(sessao)" sempre que o login mudar (entrar/sair).
+// Devolve uma função para parar de observar.
+export function observarSessao(callback) {
+  const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+    callback(sessao)
+  })
+  return () => data.subscription.unsubscribe()
 }

@@ -32,6 +32,7 @@ function formatarPct(valor) {
 export default function VeiculoLista({ onNovo, onEditar }) {
   const [veiculos, setVeiculos] = useState([])
   const [carregando, setCarregando] = useState(true)
+  const [erro, setErro] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('todos')
   const [busca, setBusca] = useState('')
 
@@ -41,9 +42,15 @@ export default function VeiculoLista({ onNovo, onEditar }) {
 
   async function recarregar() {
     setCarregando(true)
-    const lista = await listarVeiculos()
-    setVeiculos(lista)
-    setCarregando(false)
+    setErro('')
+    try {
+      const lista = await listarVeiculos()
+      setVeiculos(lista)
+    } catch (e) {
+      setErro(e.message || 'Não foi possível carregar os veículos.')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   async function excluir(veiculo) {
@@ -51,8 +58,12 @@ export default function VeiculoLista({ onNovo, onEditar }) {
       `Excluir o veículo "${veiculo.marca} ${veiculo.modelo}"? Esta ação não pode ser desfeita.`,
     )
     if (!confirmou) return
-    await removerVeiculo(veiculo.id)
-    recarregar()
+    try {
+      await removerVeiculo(veiculo.id)
+      recarregar()
+    } catch (e) {
+      alert(e.message || 'Não foi possível excluir o veículo.')
+    }
   }
 
   function contar(statusValor) {
@@ -108,6 +119,7 @@ export default function VeiculoLista({ onNovo, onEditar }) {
       </div>
 
       {carregando && <p className="texto-suave">Carregando…</p>}
+      {erro && <p className="aviso-erro">{erro}</p>}
 
       {/* Estado vazio: nenhum veículo cadastrado */}
       {!carregando && !temVeiculos && (
