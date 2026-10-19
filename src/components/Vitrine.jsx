@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { listarVeiculos } from '../data/repository.js'
-import { infoStatus } from '../data/modelos.js'
+import { infoStatus, formatarAno } from '../data/modelos.js'
 import { formatarBRL, formatarNumero } from '../utils/formato.js'
-import { IconeCarro } from './Icones.jsx'
+import GaleriaFotos from './GaleriaFotos.jsx'
 
 // Prévia de como os veículos apareceriam no site público (vitrine).
 // Mostra apenas os veículos "à venda" ou "reservado" e respeita as
@@ -40,14 +40,13 @@ export default function Vitrine() {
 
       <div className="grade-cards">
         {visiveis.map((veiculo) => {
-          const foto = (veiculo.fotos || [])[0]
           const status = infoStatus(veiculo.status)
           const pendenciasVisiveis = (veiculo.pendencias || []).filter(
             (p) => p.mostrarNoSite,
           )
 
           const detalhes = [
-            veiculo.ano,
+            formatarAno(veiculo),
             veiculo.cor,
             veiculo.quilometragem !== '' && veiculo.quilometragem != null
               ? `${formatarNumero(veiculo.quilometragem)} km`
@@ -58,23 +57,15 @@ export default function Vitrine() {
 
           return (
             <article key={veiculo.id} className="card">
-              <div className="card__midia">
-                {foto ? (
-                  <img
-                    className="card__foto"
-                    src={foto}
-                    alt={`${veiculo.marca} ${veiculo.modelo}`}
-                  />
-                ) : (
-                  <div className="card__foto card__sem-foto">
-                    <IconeCarro size={48} />
-                  </div>
-                )}
+              <GaleriaFotos
+                fotos={veiculo.fotos}
+                alt={`${veiculo.marca} ${veiculo.modelo}`}
+              >
                 <span className={`badge badge--flutuante badge--${veiculo.status}`}>
                   <span className="badge__ponto"></span>
                   {status.rotulo}
                 </span>
-              </div>
+              </GaleriaFotos>
 
               <div className="card__corpo">
                 <div>
