@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { listarVeiculos } from '../data/repository.js'
 import { infoStatus } from '../data/modelos.js'
 import { formatarBRL, formatarNumero } from '../utils/formato.js'
+import { IconeCarro } from './Icones.jsx'
 
 // Prévia de como os veículos apareceriam no site público (vitrine).
-// Aqui mostramos apenas os veículos "à venda" ou "reservado" e
-// respeitamos as opções "mostrar preço no site" e "mostrar no site"
-// de cada pendência. Esta tela é só uma prévia dentro do sistema.
+// Mostra apenas os veículos "à venda" ou "reservado" e respeita as
+// opções "mostrar preço no site" e "mostrar no site" de cada pendência.
 export default function Vitrine() {
   const [veiculos, setVeiculos] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -46,41 +46,45 @@ export default function Vitrine() {
             (p) => p.mostrarNoSite,
           )
 
+          const detalhes = [
+            veiculo.ano,
+            veiculo.cor,
+            veiculo.quilometragem !== '' && veiculo.quilometragem != null
+              ? `${formatarNumero(veiculo.quilometragem)} km`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' • ')
+
           return (
-            <article key={veiculo.id} className="card vitrine-card">
-              {foto ? (
-                <img className="card__foto" src={foto} alt={`${veiculo.marca} ${veiculo.modelo}`} />
-              ) : (
-                <div className="card__foto card__sem-foto" aria-hidden="true">
-                  🚗
-                </div>
-              )}
+            <article key={veiculo.id} className="card">
+              <div className="card__midia">
+                {foto ? (
+                  <img
+                    className="card__foto"
+                    src={foto}
+                    alt={`${veiculo.marca} ${veiculo.modelo}`}
+                  />
+                ) : (
+                  <div className="card__foto card__sem-foto">
+                    <IconeCarro size={48} />
+                  </div>
+                )}
+                <span className={`badge badge--flutuante badge--${veiculo.status}`}>
+                  <span className="badge__ponto"></span>
+                  {status.rotulo}
+                </span>
+              </div>
 
               <div className="card__corpo">
-                <div className="card__titulo-linha">
+                <div>
                   <h3 className="card__titulo">
                     {veiculo.marca} {veiculo.modelo}
                   </h3>
-                  {veiculo.status === 'reservado' && (
-                    <span className="badge" style={{ backgroundColor: status.cor }}>
-                      {status.rotulo}
-                    </span>
-                  )}
+                  {detalhes && <p className="card__detalhes">{detalhes}</p>}
                 </div>
 
-                <p className="card__detalhes texto-suave">
-                  {[
-                    veiculo.ano,
-                    veiculo.cor,
-                    veiculo.quilometragem !== '' && veiculo.quilometragem != null
-                      ? `${formatarNumero(veiculo.quilometragem)} km`
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' • ')}
-                </p>
-
-                <p className="vitrine-card__preco">
+                <p className="vitrine-card__preco num">
                   {veiculo.mostrarPrecoNoSite
                     ? formatarBRL(veiculo.precoVenda)
                     : 'Consulte'}

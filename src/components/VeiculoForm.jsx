@@ -29,12 +29,10 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
 
   const ehEdicao = Boolean(veiculo.id)
 
-  // Atualiza um campo simples do veículo.
   function atualizar(campo, valor) {
     setVeiculo((v) => ({ ...v, [campo]: valor }))
   }
 
-  // Processa (reduz) e adiciona as fotos escolhidas.
   async function aoEscolherFotos(evento) {
     const arquivos = Array.from(evento.target.files || [])
     if (arquivos.length === 0) return
@@ -59,8 +57,7 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     setVeiculo((v) => ({ ...v, fotos: v.fotos.filter((_, i) => i !== indice) }))
   }
 
-  // Converte os campos de texto dos números para números de verdade
-  // antes de salvar (deixa os dados prontos para o Supabase no futuro).
+  // Converte os campos de texto para números antes de salvar.
   function prepararParaSalvar(v) {
     const paraNumero = (x) => (x === '' || x == null ? 0 : Number(x))
     return {
@@ -190,26 +187,32 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
         <legend>Preços</legend>
         <div className="form__grade">
           <div className="campo">
-            <label>Preço de compra (R$)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={veiculo.precoCompra}
-              onChange={(e) => atualizar('precoCompra', e.target.value)}
-              placeholder="Quanto você pagou"
-            />
+            <label>Preço de compra</label>
+            <div className="campo-moeda">
+              <span className="campo-moeda__prefixo">R$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={veiculo.precoCompra}
+                onChange={(e) => atualizar('precoCompra', e.target.value)}
+                placeholder="Quanto você pagou"
+              />
+            </div>
           </div>
           <div className="campo">
-            <label>Preço de venda (R$)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={veiculo.precoVenda}
-              onChange={(e) => atualizar('precoVenda', e.target.value)}
-              placeholder="Quanto vai anunciar"
-            />
+            <label>Preço de venda</label>
+            <div className="campo-moeda">
+              <span className="campo-moeda__prefixo">R$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={veiculo.precoVenda}
+                onChange={(e) => atualizar('precoVenda', e.target.value)}
+                placeholder="Quanto vai anunciar"
+              />
+            </div>
           </div>
         </div>
         <label className="checkbox">
@@ -260,11 +263,11 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
       <div className="resumo-custos">
         <div className="resumo-custos__item">
           <span className="texto-suave">Custo total</span>
-          <strong>{formatarBRL(custoTotal)}</strong>
+          <strong className="num">{formatarBRL(custoTotal)}</strong>
         </div>
         <div className="resumo-custos__item">
           <span className="texto-suave">Lucro estimado</span>
-          <strong className={lucro < 0 ? 'valor-negativo' : 'valor-positivo'}>
+          <strong className={'num ' + (lucro < 0 ? 'valor-negativo' : 'valor-positivo')}>
             {formatarBRL(lucro)}
           </strong>
         </div>

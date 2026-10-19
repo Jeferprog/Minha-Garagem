@@ -41,24 +41,30 @@ export default function PendenciasEditor({ pendencias, aoAlterar }) {
 
           <div className="pendencia__grade">
             <div className="campo">
-              <label>Custo estimado (R$)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={p.custoEstimado}
-                onChange={(e) => atualizar(p.id, 'custoEstimado', e.target.value)}
-              />
+              <label>Custo estimado</label>
+              <div className="campo-moeda">
+                <span className="campo-moeda__prefixo">R$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={p.custoEstimado}
+                  onChange={(e) => atualizar(p.id, 'custoEstimado', e.target.value)}
+                />
+              </div>
             </div>
             <div className="campo">
-              <label>Custo real (R$)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={p.custoReal}
-                onChange={(e) => atualizar(p.id, 'custoReal', e.target.value)}
-              />
+              <label>Custo real</label>
+              <div className="campo-moeda">
+                <span className="campo-moeda__prefixo">R$</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={p.custoReal}
+                  onChange={(e) => atualizar(p.id, 'custoReal', e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -100,7 +106,7 @@ export default function PendenciasEditor({ pendencias, aoAlterar }) {
           + Adicionar pendência
         </button>
         <span className="texto-suave">
-          Custo das resolvidas: <strong>{formatarBRL(subtotalResolvidas)}</strong>
+          Custo das resolvidas: <strong className="num">{formatarBRL(subtotalResolvidas)}</strong>
         </span>
       </div>
     </div>

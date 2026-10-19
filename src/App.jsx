@@ -2,6 +2,7 @@ import { useState } from 'react'
 import VeiculoLista from './components/VeiculoLista.jsx'
 import VeiculoForm from './components/VeiculoForm.jsx'
 import Vitrine from './components/Vitrine.jsx'
+import { IconeCarro, IconeMais } from './components/Icones.jsx'
 
 // Componente principal. Controla qual tela está aberta e qual veículo
 // está sendo editado. Trocar de tela é só mudar o valor de "tela".
@@ -27,56 +28,63 @@ export default function App() {
   return (
     <div className="app">
       <header className="cabecalho">
-        <div className="cabecalho__marca">
-          <span className="cabecalho__logo" aria-hidden="true">
-            🚗
-          </span>
-          <div>
-            <h1>Minha Garagem</h1>
-            <p>Controle interno de veículos</p>
+        <div className="cabecalho__inner">
+          <div className="cabecalho__marca">
+            <span className="cabecalho__logo-box">
+              <IconeCarro size={24} />
+            </span>
+            <div>
+              <h1 className="cabecalho__titulo">Minha Garagem</h1>
+              <p className="cabecalho__sub">Controle interno de veículos</p>
+            </div>
+          </div>
+
+          <div className="cabecalho__acoes">
+            <nav className="nav">
+              <button
+                type="button"
+                className={'nav__link' + (tela === 'lista' ? ' ativo' : '')}
+                onClick={voltarParaLista}
+              >
+                Veículos
+              </button>
+              <button
+                type="button"
+                className={'nav__link' + (tela === 'vitrine' ? ' ativo' : '')}
+                onClick={() => setTela('vitrine')}
+              >
+                Vitrine
+              </button>
+            </nav>
+            <button type="button" className="botao botao--primario" onClick={abrirNovo}>
+              <IconeMais size={18} />
+              Novo veículo
+            </button>
           </div>
         </div>
-
-        <nav className="cabecalho__nav">
-          <button
-            type="button"
-            className={'botao botao--neutro' + (tela === 'lista' ? ' ativo' : '')}
-            onClick={voltarParaLista}
-          >
-            Veículos
-          </button>
-          <button
-            type="button"
-            className={'botao botao--neutro' + (tela === 'vitrine' ? ' ativo' : '')}
-            onClick={() => setTela('vitrine')}
-          >
-            Vitrine (prévia)
-          </button>
-          <button type="button" className="botao botao--primario" onClick={abrirNovo}>
-            + Novo veículo
-          </button>
-        </nav>
       </header>
 
       <main className="conteudo">
-        {tela === 'lista' && (
-          <VeiculoLista onNovo={abrirNovo} onEditar={abrirEdicao} />
-        )}
+        <div className="conteudo__inner">
+          {tela === 'lista' && (
+            <VeiculoLista onNovo={abrirNovo} onEditar={abrirEdicao} />
+          )}
 
-        {tela === 'form' && (
-          <VeiculoForm
-            veiculo={veiculoEditando}
-            onSalvo={voltarParaLista}
-            onCancelar={voltarParaLista}
-          />
-        )}
+          {tela === 'form' && (
+            <VeiculoForm
+              veiculo={veiculoEditando}
+              onSalvo={voltarParaLista}
+              onCancelar={voltarParaLista}
+            />
+          )}
 
-        {tela === 'vitrine' && <Vitrine />}
+          {tela === 'vitrine' && <Vitrine />}
+        </div>
       </main>
 
       <footer className="rodape">
-        Os dados ficam salvos neste navegador. Para uso em vários
-        computadores, depois trocamos para um banco de dados online (Supabase).
+        Os dados ficam salvos neste navegador. Para uso em vários computadores,
+        depois trocamos para um banco de dados online (Supabase).
       </footer>
     </div>
   )
