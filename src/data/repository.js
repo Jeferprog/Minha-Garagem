@@ -21,8 +21,9 @@
 
 import { gerarId } from '../utils/formato.js'
 
-// Nome da "gaveta" onde os dados ficam guardados no navegador.
+// Nomes das "gavetas" onde os dados ficam guardados no navegador.
 const CHAVE = 'minha-garagem:veiculos'
+const CHAVE_CONFIG = 'minha-garagem:config'
 
 // --- Funções internas (uso apenas dentro deste arquivo) ---
 
@@ -98,4 +99,27 @@ export async function salvarVeiculo(veiculo) {
 export async function removerVeiculo(id) {
   const veiculos = lerTudo().filter((v) => v.id !== id)
   gravarTudo(veiculos)
+}
+
+// --- Configurações do sistema (ex.: número de WhatsApp) ---
+// Também passam pelo repositório para, no futuro, irem para o Supabase.
+
+export async function obterConfig() {
+  try {
+    const bruto = localStorage.getItem(CHAVE_CONFIG)
+    return bruto ? JSON.parse(bruto) : { whatsapp: '' }
+  } catch (erro) {
+    console.error('Erro ao ler as configurações:', erro)
+    return { whatsapp: '' }
+  }
+}
+
+export async function salvarConfig(config) {
+  try {
+    localStorage.setItem(CHAVE_CONFIG, JSON.stringify(config))
+  } catch (erro) {
+    console.error('Erro ao salvar as configurações:', erro)
+    throw erro
+  }
+  return config
 }

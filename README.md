@@ -123,6 +123,8 @@ exatamente como o Supabase trabalha.
   administração e pedem **senha**. A senha atual é: **`garagem2024`**.
 - Para **trocar a senha**, altere o valor de `SENHA_ADMIN` no arquivo
   `src/auth.js` e publique o site de novo (ou peça para o Claude trocar).
+- Na aba **Configurações** (dentro da administração) você define o
+  **número de WhatsApp** que recebe os contatos vindos da vitrine.
 
 > ⚠️ Como o site é estático, essa senha é uma **trava leve**: impede o acesso
 > casual, mas não é segurança forte. Login de verdade e uma vitrine pública
