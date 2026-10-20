@@ -29,6 +29,15 @@ export function formatarAno(veiculo) {
   return ''
 }
 
+// Data de hoje no formato aaaa-mm-dd (padrão do campo "No estoque desde").
+export function hojeISO() {
+  const d = new Date()
+  const ano = d.getFullYear()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
+
 // Cria um veículo "em branco" para o formulário de cadastro.
 export function novoVeiculo() {
   return {
@@ -40,6 +49,7 @@ export function novoVeiculo() {
     cor: '',
     placa: '',
     quilometragem: '',
+    estoqueDesde: hojeISO(),
     precoCompra: '',
     precoVenda: '',
     mostrarPrecoNoSite: true,
@@ -87,11 +97,23 @@ export function calcularMargemPercentual(veiculo) {
   return (calcularLucroEstimado(veiculo) / custo) * 100
 }
 
-// Quantos dias o veículo está em estoque, contando a partir do cadastro
-// (criadoEm). Devolve null se a data não existir.
+// Quantos dias o veículo está em estoque, contando a partir da data
+// "No estoque desde" (estoqueDesde). Devolve null se não houver data.
 export function diasEmEstoque(veiculo) {
-  if (!veiculo.criadoEm) return null
-  const inicio = new Date(veiculo.criadoEm)
+  // Usa a data "No estoque desde"; se não houver, cai para a data de cadastro.
+  const base = veiculo.estoqueDesde || veiculo.criadoEm
+  if (!base) return null
+
+  let inicio
+  if (typeof base === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(base)) {
+    // Data simples (aaaa-mm-dd): interpreta como meia-noite no horário local.
+    const [a, m, d] = base.split('-').map(Number)
+    inicio = new Date(a, m - 1, d)
+  } else {
+    // Data/hora completa (ex.: criadoEm em ISO).
+    inicio = new Date(base)
+  }
+
   if (isNaN(inicio.getTime())) return null
   const ms = Date.now() - inicio.getTime()
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)))

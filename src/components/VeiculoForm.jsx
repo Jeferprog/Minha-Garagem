@@ -20,6 +20,9 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
         // para que os inputs continuem "controlados".
         ano: veiculoInicial.ano ?? '',
         anoModelo: veiculoInicial.anoModelo ?? '',
+        estoqueDesde:
+          veiculoInicial.estoqueDesde ??
+          (veiculoInicial.criadoEm ? veiculoInicial.criadoEm.slice(0, 10) : ''),
         fotos: [...(veiculoInicial.fotos || [])],
         pendencias: (veiculoInicial.pendencias || []).map((p) => ({ ...p })),
       }
@@ -68,6 +71,7 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
       ...v,
       ano: v.ano === '' || v.ano == null ? null : Number(v.ano),
       anoModelo: v.anoModelo === '' || v.anoModelo == null ? null : Number(v.anoModelo),
+      estoqueDesde: v.estoqueDesde || null,
       quilometragem: paraNumero(v.quilometragem),
       precoCompra: paraNumero(v.precoCompra),
       precoVenda: paraNumero(v.precoVenda),
@@ -178,6 +182,14 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
               value={veiculo.quilometragem}
               onChange={(e) => atualizar('quilometragem', e.target.value)}
               placeholder="Ex.: 48000"
+            />
+          </div>
+          <div className="campo">
+            <label>No estoque desde</label>
+            <input
+              type="date"
+              value={veiculo.estoqueDesde}
+              onChange={(e) => atualizar('estoqueDesde', e.target.value)}
             />
           </div>
           <div className="campo">
