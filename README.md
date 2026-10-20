@@ -64,7 +64,7 @@ novidades, o site é gerado e publicado sozinho.
 4. Pronto. A partir de agora, cada atualização na branch `main` publica o site.
 
 O endereço do site será:
-**https://jeferprog.github.io/Minha-Garagem-/**
+**https://jeferprog.github.io/Minha-Garagem/**
 
 > Dica: depois de enviar alterações, acompanhe a publicação na aba
 > **Actions** do repositório. Quando o item ficar verde, o site está no ar.
