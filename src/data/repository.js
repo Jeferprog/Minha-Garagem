@@ -16,11 +16,15 @@
 import { supabase } from '../supabase.js'
 import { gerarId } from '../utils/formato.js'
 
-// Transforma um erro do Supabase numa mensagem amigável.
+// Transforma um erro do Supabase numa mensagem amigável, incluindo o
+// motivo técnico real (ajuda muito a descobrir problemas de configuração).
 function erroAmigavel(erro, acao) {
   console.error(`Erro ao ${acao}:`, erro)
+  const detalhe = (erro && (erro.message || erro.hint || erro.details)) || ''
   return new Error(
-    `Não foi possível ${acao}. Verifique sua conexão com a internet e tente novamente.`,
+    `Não foi possível ${acao}.` +
+      (detalhe ? ` Motivo: ${detalhe}.` : '') +
+      ' (Confira sua conexão e a configuração do Supabase.)',
   )
 }
 
