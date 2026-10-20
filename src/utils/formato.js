@@ -31,9 +31,9 @@ export function gerarId() {
   return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2)
 }
 
-// Reduz o tamanho de uma foto antes de salvar, para não lotar o
-// armazenamento do navegador. Recebe o arquivo escolhido e devolve
-// a imagem já reduzida em formato de texto (data URL), pronta para salvar.
+// Reduz o tamanho de uma foto antes de enviar ao Supabase Storage.
+// Recebe o arquivo escolhido e devolve a imagem reduzida como um
+// arquivo (Blob) em JPEG, pronto para enviar.
 export function redimensionarImagem(arquivo, maxLado = 1000, qualidade = 0.7) {
   return new Promise((resolver, rejeitar) => {
     const leitor = new FileReader()
@@ -60,7 +60,14 @@ export function redimensionarImagem(arquivo, maxLado = 1000, qualidade = 0.7) {
         const contexto = canvas.getContext('2d')
         contexto.drawImage(imagem, 0, 0, largura, altura)
 
-        resolver(canvas.toDataURL('image/jpeg', qualidade))
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolver(blob)
+            else rejeitar(new Error('Não foi possível processar a imagem.'))
+          },
+          'image/jpeg',
+          qualidade,
+        )
       }
 
       imagem.onerror = () => rejeitar(new Error('Não foi possível ler a imagem.'))

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { salvarVeiculo } from '../data/repository.js'
+import { salvarVeiculo, enviarFoto } from '../data/repository.js'
 import {
   STATUS,
   novoVeiculo,
@@ -49,11 +49,13 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     try {
       const novas = []
       for (const arquivo of arquivos) {
-        novas.push(await redimensionarImagem(arquivo))
+        const blob = await redimensionarImagem(arquivo)
+        const url = await enviarFoto(blob)
+        novas.push(url)
       }
       setVeiculo((v) => ({ ...v, fotos: [...v.fotos, ...novas] }))
-    } catch {
-      setErro('Não foi possível processar uma das imagens.')
+    } catch (err) {
+      setErro(err.message || 'Não foi possível enviar uma das imagens.')
     } finally {
       setProcessandoFotos(false)
       evento.target.value = '' // permite escolher o mesmo arquivo novamente
@@ -255,7 +257,7 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
       <fieldset className="form__secao">
         <legend>Fotos</legend>
         <input type="file" accept="image/*" multiple onChange={aoEscolherFotos} />
-        {processandoFotos && <p className="texto-suave">Processando fotos…</p>}
+        {processandoFotos && <p className="texto-suave">Enviando fotos…</p>}
 
         {veiculo.fotos.length > 0 && (
           <div className="fotos-grade">
