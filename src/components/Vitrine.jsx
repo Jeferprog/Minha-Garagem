@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listarVeiculos, obterConfig } from '../data/repository.js'
+import { listarVitrine, obterConfig } from '../data/repository.js'
 import { infoStatus, formatarAno } from '../data/modelos.js'
 import { formatarBRL, formatarNumero } from '../utils/formato.js'
 import { linkWhatsApp } from '../utils/whatsapp.js'
@@ -18,7 +18,7 @@ export default function Vitrine({ admin = false }) {
   const [erro, setErro] = useState('')
 
   useEffect(() => {
-    Promise.all([listarVeiculos(), obterConfig()])
+    Promise.all([listarVitrine(), obterConfig()])
       .then(([lista, config]) => {
         setVeiculos(lista)
         setWhatsapp(config.whatsapp || '')
@@ -27,11 +27,8 @@ export default function Vitrine({ admin = false }) {
       .finally(() => setCarregando(false))
   }, [])
 
-  const visiveis = veiculos.filter(
-    (v) => v.status === 'a_venda' || v.status === 'reservado',
-  )
-  const usandoExemplos = !carregando && !erro && visiveis.length === 0
-  const paraMostrar = usandoExemplos ? VEICULOS_EXEMPLO : visiveis
+  const usandoExemplos = !carregando && !erro && veiculos.length === 0
+  const paraMostrar = usandoExemplos ? VEICULOS_EXEMPLO : veiculos
 
   return (
     <section className="vitrine">

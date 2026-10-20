@@ -16,11 +16,18 @@
 import { supabase } from '../supabase.js'
 import { gerarId } from '../utils/formato.js'
 
-// Transforma um erro do Supabase numa mensagem amigável.
+// Nome do "balde" (bucket) do Storage onde ficam as fotos dos veículos.
+const BUCKET_FOTOS = 'fotos-veiculos'
+
+// Transforma um erro do Supabase numa mensagem amigável, incluindo o
+// motivo técnico real (ajuda muito a descobrir problemas de configuração).
 function erroAmigavel(erro, acao) {
   console.error(`Erro ao ${acao}:`, erro)
+  const detalhe = (erro && (erro.message || erro.hint || erro.details)) || ''
   return new Error(
-    `Não foi possível ${acao}. Verifique sua conexão com a internet e tente novamente.`,
+    `Não foi possível ${acao}.` +
+      (detalhe ? ` Motivo: ${detalhe}.` : '') +
+      ' (Confira sua conexão e a configuração do Supabase.)',
   )
 }
 
@@ -32,6 +39,15 @@ export async function listarVeiculos() {
     .select('*')
     .order('atualizadoEm', { ascending: false })
   if (error) throw erroAmigavel(error, 'carregar os veículos')
+  return data || []
+}
+
+// Lista pública da vitrine: usa a VIEW "vitrine" do banco, que já traz
+// só os veículos à venda/reservados e só os campos seguros (sem preço de
+// compra, custos nem pendências internas).
+export async function listarVitrine() {
+  const { data, error } = await supabase.from('vitrine').select('*')
+  if (error) throw erroAmigavel(error, 'carregar a vitrine')
   return data || []
 }
 
@@ -67,6 +83,20 @@ export async function salvarVeiculo(veiculo) {
 export async function removerVeiculo(id) {
   const { error } = await supabase.from('veiculos').delete().eq('id', id)
   if (error) throw erroAmigavel(error, 'excluir o veículo')
+}
+
+// --- Fotos (Supabase Storage) ---
+
+// Envia uma foto (Blob) para o Storage e devolve o link público dela.
+// No banco do veículo guardamos só esse link (curto), não a imagem toda.
+export async function enviarFoto(blob) {
+  const nome = `${gerarId()}.jpg`
+  const { error } = await supabase.storage
+    .from(BUCKET_FOTOS)
+    .upload(nome, blob, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw erroAmigavel(error, 'enviar a foto')
+  const { data } = supabase.storage.from(BUCKET_FOTOS).getPublicUrl(nome)
+  return data.publicUrl
 }
 
 // --- Configurações (ex.: número de WhatsApp) ---

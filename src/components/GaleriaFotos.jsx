@@ -40,6 +40,7 @@ export default function GaleriaFotos({ fotos, alt, children }) {
           className="card__foto galeria__foto"
           src={lista[atual]}
           alt={alt}
+          loading="lazy"
           onClick={() => setVerLightbox(true)}
         />
         {children}

@@ -111,8 +111,14 @@ código, a segurança vem das regras do banco e do login).
 3. **Authentication → Providers → Email** → desligue
    **"Allow new users to sign up"** (assim só você tem acesso de admin).
 
-As regras de segurança (RLS) deixam **qualquer pessoa ver** a vitrine,
-mas só o **administrador logado** cadastrar/editar/excluir.
+As regras de segurança (RLS) deixam **qualquer pessoa ver** a vitrine
+(pela *view* `vitrine`, que mostra só dados públicos — sem preço de compra,
+custos ou pendências internas), mas só o **administrador logado**
+cadastrar/editar/excluir.
+
+As **fotos** ficam no **Storage** do Supabase (bucket `fotos-veiculos`),
+não dentro do banco: assim o banco fica leve e as imagens carregam rápido.
+No cadastro do veículo guardamos só o **link** de cada foto.
 
 ---
 

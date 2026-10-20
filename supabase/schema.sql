@@ -1,11 +1,9 @@
 -- ============================================================
 -- Minha Garagem — estrutura do banco de dados (Supabase)
 --
--- COMO USAR (uma vez só):
--- 1. Abra o painel do seu projeto no Supabase.
--- 2. Menu lateral > SQL Editor > New query.
--- 3. Cole TODO o conteúdo deste arquivo e clique em "Run".
--- Pode rodar de novo quando quiser, sem problema (é seguro repetir).
+-- COMO USAR (pode rodar de novo quando quiser, é seguro repetir):
+-- 1. Painel do Supabase > SQL Editor > New query.
+-- 2. Cole TODO o conteúdo deste arquivo e clique em "Run".
 -- ============================================================
 
 -- Tabela de veículos
@@ -28,8 +26,6 @@ create table if not exists public.veiculos (
   "criadoEm" timestamptz default now(),
   "atualizadoEm" timestamptz default now()
 );
-
--- Garante a coluna "No estoque desde" em bancos criados antes dela
 alter table public.veiculos add column if not exists "estoqueDesde" date;
 
 -- Tabela de configurações (uma linha só, id = 1)
@@ -46,20 +42,66 @@ insert into public.config (id, whatsapp)
 alter table public.veiculos enable row level security;
 alter table public.config enable row level security;
 
--- LEITURA: qualquer pessoa pode ver (a vitrine é pública)
+-- VEÍCULOS: leitura e escrita SOMENTE do administrador logado.
+-- (Dados internos, como preço de compra, NÃO ficam públicos. A vitrine
+--  pública usa a VIEW "vitrine", definida mais abaixo.)
 drop policy if exists "leitura publica veiculos" on public.veiculos;
-create policy "leitura publica veiculos" on public.veiculos
-  for select using (true);
+drop policy if exists "escrita admin veiculos" on public.veiculos;
+create policy "admin veiculos" on public.veiculos
+  for all to authenticated using (true) with check (true);
 
+-- CONFIG: leitura pública (só o número de WhatsApp), escrita do admin
 drop policy if exists "leitura publica config" on public.config;
 create policy "leitura publica config" on public.config
   for select using (true);
-
--- ESCRITA (criar / editar / excluir): só quem está logado (administrador)
-drop policy if exists "escrita admin veiculos" on public.veiculos;
-create policy "escrita admin veiculos" on public.veiculos
-  for all to authenticated using (true) with check (true);
-
 drop policy if exists "escrita admin config" on public.config;
 create policy "escrita admin config" on public.config
   for all to authenticated using (true) with check (true);
+
+-- VIEW pública da vitrine: entrega só os campos seguros e só os veículos
+-- "à venda" ou "reservados". O preço só aparece quando "mostrar no site"
+-- está ligado; e só as pendências marcadas para mostrar no site.
+drop view if exists public.vitrine;
+create view public.vitrine as
+select
+  id,
+  marca,
+  modelo,
+  ano,
+  "anoModelo",
+  cor,
+  quilometragem,
+  status,
+  fotos,
+  "mostrarPrecoNoSite",
+  case when "mostrarPrecoNoSite" then "precoVenda" else null end as "precoVenda",
+  (
+    select coalesce(jsonb_agg(p), '[]'::jsonb)
+    from jsonb_array_elements(coalesce(pendencias, '[]'::jsonb)) as p
+    where (p ->> 'mostrarNoSite')::boolean is true
+  ) as pendencias
+from public.veiculos
+where status in ('a_venda', 'reservado');
+
+grant select on public.vitrine to anon, authenticated;
+
+-- STORAGE: balde (bucket) público para as fotos dos veículos
+insert into storage.buckets (id, name, public)
+  values ('fotos-veiculos', 'fotos-veiculos', true)
+  on conflict (id) do nothing;
+
+-- Qualquer pessoa vê as fotos; só o admin logado envia/altera/exclui.
+drop policy if exists "fotos envio admin" on storage.objects;
+create policy "fotos envio admin" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'fotos-veiculos');
+
+drop policy if exists "fotos alteracao admin" on storage.objects;
+create policy "fotos alteracao admin" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'fotos-veiculos');
+
+drop policy if exists "fotos exclusao admin" on storage.objects;
+create policy "fotos exclusao admin" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'fotos-veiculos');
