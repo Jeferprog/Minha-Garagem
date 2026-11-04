@@ -4,23 +4,22 @@ import VeiculoForm from './components/VeiculoForm.jsx'
 import Vitrine from './components/Vitrine.jsx'
 import Login from './components/Login.jsx'
 import Configuracoes from './components/Configuracoes.jsx'
-import { IconeCarro, IconeMais } from './components/Icones.jsx'
+import { IconeMais } from './components/Icones.jsx'
 import { entrar, sair, obterSessao, observarSessao } from './auth.js'
 
 // Componente principal.
-// - A VITRINE é pública (qualquer pessoa vê).
-// - As demais telas (lista, cadastro/edição, configurações) são da
-//   administração e exigem login (e-mail e senha) pelo Supabase.
+// - A VITRINE é pública. As demais telas (Pátio, Ficha, Configurações) são
+//   da administração e exigem login (e-mail e senha) pelo Supabase.
+// - Telas internas: 'lista' (Pátio), 'form' (Ficha), 'vitrine', 'config'.
 export default function App() {
   const [sessao, setSessao] = useState(null)
   const [carregandoSessao, setCarregandoSessao] = useState(true)
-  const [tela, setTela] = useState('vitrine') // 'vitrine' | 'lista' | 'form' | 'config'
+  const [tela, setTela] = useState('vitrine')
   const [veiculoEditando, setVeiculoEditando] = useState(null)
   const [telaLogin, setTelaLogin] = useState(false)
 
   const autenticado = !!sessao
 
-  // Verifica se já existe alguém logado e fica de olho em mudanças de login.
   useEffect(() => {
     obterSessao().then((s) => {
       setSessao(s)
@@ -31,7 +30,7 @@ export default function App() {
   }, [])
 
   async function fazerLogin(email, senha) {
-    const novaSessao = await entrar(email, senha) // lança erro se falhar
+    const novaSessao = await entrar(email, senha)
     setSessao(novaSessao)
     setTelaLogin(false)
     setTela('lista')
@@ -43,93 +42,102 @@ export default function App() {
     setTela('vitrine')
   }
 
+  function irPara(t) {
+    setTela(t)
+    window.scrollTo(0, 0)
+  }
   function abrirNovo() {
     setVeiculoEditando(null)
-    setTela('form')
+    irPara('form')
   }
-
   function abrirEdicao(veiculo) {
     setVeiculoEditando(veiculo)
-    setTela('form')
+    irPara('form')
   }
-
   function voltarParaLista() {
     setVeiculoEditando(null)
-    setTela('lista')
+    irPara('lista')
   }
 
-  // Enquanto verifica se há login salvo, mostra um aviso curto.
   if (carregandoSessao) {
     return (
       <div className="login">
-        <p className="texto-suave">Carregando…</p>
+        <p className="text-muted">Carregando…</p>
       </div>
     )
   }
 
-  // Tela de login (quando o visitante clica em "Administração").
   if (!autenticado && telaLogin) {
     return <Login onEntrar={fazerLogin} onVoltar={() => setTelaLogin(false)} />
   }
 
-  // Mostra a vitrine quando não está logado, ou quando o admin escolhe a aba.
   const mostrarVitrine = !autenticado || tela === 'vitrine'
+  const navItens = [
+    { rotulo: 'Pátio', alvo: 'lista', ativo: tela === 'lista' || tela === 'form' },
+    { rotulo: 'Vitrine', alvo: 'vitrine', ativo: tela === 'vitrine' },
+    { rotulo: 'Configurações', alvo: 'config', ativo: tela === 'config' },
+  ]
 
   return (
     <div className="app">
       <header className="cabecalho">
         <div className="cabecalho__inner">
-          <div className="cabecalho__marca">
-            <span className="cabecalho__logo-box">
-              <IconeCarro size={24} />
+          <button
+            type="button"
+            className="marca"
+            onClick={() => irPara(autenticado ? 'lista' : 'vitrine')}
+          >
+            <span className="marca__quadrado" aria-hidden="true"></span>
+            <span className="marca__texto">
+              <span className="marca__nome">Minha Garagem</span>
+              <span className="marca__sub">
+                {tela === 'vitrine' ? 'Veículos à venda' : 'Controle interno'}
+              </span>
             </span>
-            <div>
-              <h1 className="cabecalho__titulo">Minha Garagem</h1>
-              <p className="cabecalho__sub">
-                {autenticado ? 'Controle interno de veículos' : 'Veículos à venda'}
-              </p>
-            </div>
-          </div>
+          </button>
+
+          {autenticado && (
+            <nav className="cab-nav">
+              {navItens.map((n) => (
+                <button
+                  key={n.alvo}
+                  type="button"
+                  className={'cab-nav__item' + (n.ativo ? ' ativo' : '')}
+                  onClick={() => irPara(n.alvo)}
+                >
+                  {n.rotulo}
+                </button>
+              ))}
+            </nav>
+          )}
 
           <div className="cabecalho__acoes">
             {autenticado ? (
               <>
-                <nav className="nav">
-                  <button
-                    type="button"
-                    className={'nav__link' + (tela === 'lista' ? ' ativo' : '')}
-                    onClick={voltarParaLista}
-                  >
-                    Veículos
-                  </button>
-                  <button
-                    type="button"
-                    className={'nav__link' + (tela === 'vitrine' ? ' ativo' : '')}
-                    onClick={() => setTela('vitrine')}
-                  >
-                    Vitrine
-                  </button>
-                  <button
-                    type="button"
-                    className={'nav__link' + (tela === 'config' ? ' ativo' : '')}
-                    onClick={() => setTela('config')}
-                  >
-                    Configurações
-                  </button>
-                </nav>
-                <button type="button" className="botao botao--primario" onClick={abrirNovo}>
-                  <IconeMais size={18} />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={abrirNovo}
+                  style={{ minHeight: 40, paddingInline: '16px 20px' }}
+                >
+                  <IconeMais size={16} />
                   Novo veículo
                 </button>
-                <button type="button" className="botao botao--neutro" onClick={sairAdmin}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={sairAdmin}
+                  style={{ minHeight: 40 }}
+                >
                   Sair
                 </button>
               </>
             ) : (
               <button
                 type="button"
-                className="botao botao--neutro"
+                className="btn btn-secondary"
                 onClick={() => setTelaLogin(true)}
+                style={{ minHeight: 40 }}
               >
                 Administração
               </button>
@@ -139,26 +147,25 @@ export default function App() {
       </header>
 
       <main className="conteudo">
-        <div className="conteudo__inner">
-          {mostrarVitrine && <Vitrine admin={autenticado} />}
-          {autenticado && tela === 'lista' && (
-            <VeiculoLista onNovo={abrirNovo} onEditar={abrirEdicao} />
-          )}
-          {autenticado && tela === 'form' && (
-            <VeiculoForm
-              veiculo={veiculoEditando}
-              onSalvo={voltarParaLista}
-              onCancelar={voltarParaLista}
-            />
-          )}
-          {autenticado && tela === 'config' && <Configuracoes />}
-        </div>
+        {mostrarVitrine && <Vitrine admin={autenticado} />}
+        {autenticado && tela === 'lista' && (
+          <VeiculoLista onNovo={abrirNovo} onEditar={abrirEdicao} />
+        )}
+        {autenticado && tela === 'form' && (
+          <VeiculoForm
+            veiculo={veiculoEditando}
+            onSalvo={voltarParaLista}
+            onCancelar={voltarParaLista}
+          />
+        )}
+        {autenticado && tela === 'config' && <Configuracoes />}
       </main>
 
       <footer className="rodape">
-        {autenticado
-          ? 'Dados salvos online no Supabase — aparecem em qualquer dispositivo.'
-          : 'Minha Garagem — revenda de veículos.'}
+        <div className="rodape__inner">
+          <span>Minha Garagem — revenda de veículos</span>
+          <span>Dados salvos online, em qualquer dispositivo</span>
+        </div>
       </footer>
     </div>
   )

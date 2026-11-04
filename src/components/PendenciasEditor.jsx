@@ -1,112 +1,112 @@
-import { novaPendencia, custoPendenciasResolvidas } from '../data/modelos.js'
-import { formatarBRL } from '../utils/formato.js'
+import { novaPendencia } from '../data/modelos.js'
+import { IconeCheck, IconeMais } from './Icones.jsx'
 
-// Lista editável de pendências/avarias do veículo.
-// Recebe a lista atual ("pendencias") e avisa o formulário quando ela
-// muda, chamando "aoAlterar" com a nova lista.
+// Lista editável de pendências/avarias (seção 04 da Ficha).
 export default function PendenciasEditor({ pendencias, aoAlterar }) {
   function adicionar() {
     aoAlterar([...pendencias, novaPendencia()])
   }
-
   function atualizar(id, campo, valor) {
-    aoAlterar(
-      pendencias.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)),
-    )
+    aoAlterar(pendencias.map((p) => (p.id === id ? { ...p, [campo]: valor } : p)))
   }
-
   function remover(id) {
     aoAlterar(pendencias.filter((p) => p.id !== id))
   }
 
-  const subtotalResolvidas = custoPendenciasResolvidas({ pendencias })
-
   return (
-    <div className="pendencias">
-      {pendencias.length === 0 && (
-        <p className="texto-suave">Nenhuma pendência cadastrada para este veículo.</p>
-      )}
-
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {pendencias.map((p) => (
-        <div key={p.id} className="pendencia">
-          <div className="campo">
+        <div
+          key={p.id}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(200px, 1fr) 130px 130px',
+            gap: 12,
+            alignItems: 'end',
+            padding: '16px 0',
+            borderTop: '1px solid var(--color-divider)',
+          }}
+        >
+          <div className="field">
             <label>Descrição</label>
             <input
-              type="text"
+              className="input"
               value={p.descricao}
-              placeholder="Ex.: arranhão na porta, ar-condicionado a consertar"
+              placeholder="Ex.: arranhão na porta"
               onChange={(e) => atualizar(p.id, 'descricao', e.target.value)}
+              style={{ minHeight: 40, textDecoration: p.resolvida ? 'line-through' : 'none' }}
             />
           </div>
-
-          <div className="pendencia__grade">
-            <div className="campo">
-              <label>Custo estimado</label>
-              <div className="campo-moeda">
-                <span className="campo-moeda__prefixo">R$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={p.custoEstimado}
-                  onChange={(e) => atualizar(p.id, 'custoEstimado', e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="campo">
-              <label>Custo real</label>
-              <div className="campo-moeda">
-                <span className="campo-moeda__prefixo">R$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={p.custoReal}
-                  onChange={(e) => atualizar(p.id, 'custoReal', e.target.value)}
-                />
-              </div>
-            </div>
+          <div className="field">
+            <label>Estimado</label>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              value={p.custoEstimado}
+              onChange={(e) => atualizar(p.id, 'custoEstimado', e.target.value)}
+              style={{ minHeight: 40 }}
+            />
           </div>
-
-          <div className="pendencia__opcoes">
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={p.resolvida}
-                onChange={(e) => atualizar(p.id, 'resolvida', e.target.checked)}
-              />
-              Resolvida
-            </label>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={p.mostrarNoSite}
-                onChange={(e) => atualizar(p.id, 'mostrarNoSite', e.target.checked)}
-              />
-              Mostrar no site
-            </label>
+          <div className="field">
+            <label>Real</label>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              value={p.custoReal}
+              onChange={(e) => atualizar(p.id, 'custoReal', e.target.value)}
+              style={{ minHeight: 40 }}
+            />
+          </div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 20 }}>
             <button
               type="button"
-              className="botao botao--perigo botao--pequeno"
+              className={'caixa-check' + (p.resolvida ? ' caixa-check--marcado' : '')}
+              style={{ fontSize: 13 }}
+              onClick={() => atualizar(p.id, 'resolvida', !p.resolvida)}
+            >
+              <span className="caixa-check__box">{p.resolvida && <IconeCheck size={12} />}</span>
+              Resolvida
+            </button>
+            <button
+              type="button"
+              className={'caixa-check' + (p.mostrarNoSite ? ' caixa-check--marcado' : '')}
+              style={{ fontSize: 13 }}
+              onClick={() => atualizar(p.id, 'mostrarNoSite', !p.mostrarNoSite)}
+            >
+              <span className="caixa-check__box">{p.mostrarNoSite && <IconeCheck size={12} />}</span>
+              Mostrar na vitrine
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
               onClick={() => remover(p.id)}
+              style={{ marginLeft: 'auto', fontSize: 13 }}
             >
               Remover
             </button>
           </div>
-
-          <p className="pendencia__dica texto-suave">
-            Só o custo real das pendências marcadas como <strong>resolvidas</strong> entra
-            no custo total do carro.
-          </p>
         </div>
       ))}
 
-      <div className="pendencias__rodape">
-        <button type="button" className="botao botao--neutro" onClick={adicionar}>
-          + Adicionar pendência
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          paddingTop: 16,
+          borderTop: '1px solid var(--color-divider)',
+        }}
+      >
+        <button type="button" className="btn btn-secondary" onClick={adicionar}>
+          <IconeMais size={14} sw={2.5} />
+          Adicionar pendência
         </button>
-        <span className="texto-suave">
-          Custo das resolvidas: <strong className="num">{formatarBRL(subtotalResolvidas)}</strong>
+        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
+          Só o custo real das resolvidas entra no custo total.
         </span>
       </div>
     </div>

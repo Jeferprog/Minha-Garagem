@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { IconeCarro } from './Icones.jsx'
 
-// Tela de login da administração (acessada pelo botão "Administração").
-// Recebe "onEntrar(email, senha)" que faz o login e lança erro se falhar.
+// Tela de login da administração (mesmo sistema visual Modernist).
 export default function Login({ onEntrar, onVoltar }) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -24,15 +22,16 @@ export default function Login({ onEntrar, onVoltar }) {
   return (
     <div className="login">
       <form className="login__caixa" onSubmit={enviar}>
-        <span className="cabecalho__logo-box login__logo">
-          <IconeCarro size={28} />
-        </span>
-        <h1>Administração</h1>
-        <p className="texto-suave">Entre com seu e-mail e senha de administrador.</p>
+        <span className="marca__quadrado" style={{ width: 32, height: 32 }} aria-hidden="true"></span>
+        <h1 style={{ fontSize: 28, letterSpacing: '-0.02em' }}>Administração</h1>
+        <p className="text-muted" style={{ margin: 0, fontSize: 14 }}>
+          Entre com seu e-mail e senha de administrador.
+        </p>
 
-        <div className="campo">
+        <div className="field">
           <label>E-mail</label>
           <input
+            className="input"
             type="email"
             value={email}
             autoFocus
@@ -41,27 +40,34 @@ export default function Login({ onEntrar, onVoltar }) {
               setErro('')
             }}
             placeholder="voce@email.com"
+            style={{ minHeight: 44 }}
           />
         </div>
 
-        <div className="campo">
+        <div className="field">
           <label>Senha</label>
           <input
+            className="input"
             type="password"
             value={senha}
             onChange={(e) => {
               setSenha(e.target.value)
               setErro('')
             }}
+            style={{ minHeight: 44 }}
           />
         </div>
 
-        {erro && <p className="aviso-erro">{erro}</p>}
+        {erro && (
+          <div style={{ padding: '10px 12px', background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontWeight: 600, fontSize: 14 }}>
+            {erro}
+          </div>
+        )}
 
-        <button type="submit" className="botao botao--primario" disabled={enviando}>
+        <button type="submit" className="btn btn-primary btn-block" disabled={enviando} style={{ minHeight: 48 }}>
           {enviando ? 'Entrando…' : 'Entrar'}
         </button>
-        <button type="button" className="botao botao--neutro" onClick={onVoltar}>
+        <button type="button" className="btn btn-secondary btn-block" onClick={onVoltar}>
           Voltar para a vitrine
         </button>
       </form>

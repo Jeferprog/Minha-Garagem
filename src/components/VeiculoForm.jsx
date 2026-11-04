@@ -1,23 +1,38 @@
-import { useState } from 'react'
-import { salvarVeiculo, enviarFoto } from '../data/repository.js'
+import { useRef, useState } from 'react'
+import { salvarVeiculo, enviarFoto, removerVeiculo } from '../data/repository.js'
 import {
   STATUS,
   novoVeiculo,
+  infoStatus,
   calcularCustoTotal,
   calcularLucroEstimado,
+  calcularMargemPercentual,
+  custoPendenciasResolvidas,
 } from '../data/modelos.js'
-import { formatarBRL, redimensionarImagem } from '../utils/formato.js'
+import { formatarBRLCompacto, redimensionarImagem } from '../utils/formato.js'
 import PendenciasEditor from './PendenciasEditor.jsx'
+import { IconeVoltar, IconeAlerta, IconeCheck, IconeX, IconeMais, IconeLixeira } from './Icones.jsx'
 
-// Formulário de cadastro (veículo novo) e de edição (veículo existente).
+function pct(n) {
+  return n.toFixed(1).replace('.', ',') + '%'
+}
+
+const CAMPOS = [
+  { k: 'marca', label: 'Marca *', type: 'text', ph: 'Ex.: Volkswagen' },
+  { k: 'modelo', label: 'Modelo *', type: 'text', ph: 'Ex.: Gol 1.0' },
+  { k: 'ano', label: 'Ano fabricação', type: 'number', ph: '2022' },
+  { k: 'anoModelo', label: 'Ano modelo', type: 'number', ph: '2023' },
+  { k: 'cor', label: 'Cor', type: 'text', ph: 'Ex.: Prata' },
+  { k: 'placa', label: 'Placa', type: 'text', ph: 'ABC1D23' },
+  { k: 'quilometragem', label: 'Quilometragem', type: 'number', ph: '48000' },
+  { k: 'estoqueDesde', label: 'No estoque desde', type: 'date', ph: '' },
+]
+
 export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancelar }) {
-  // Cópia local para edição. Não mexemos no objeto original da lista.
   const [veiculo, setVeiculo] = useState(() => {
     if (veiculoInicial) {
       return {
         ...veiculoInicial,
-        // Veículos antigos podem não ter esses campos; usamos '' como padrão
-        // para que os inputs continuem "controlados".
         ano: veiculoInicial.ano ?? '',
         anoModelo: veiculoInicial.anoModelo ?? '',
         estoqueDesde:
@@ -33,32 +48,39 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [processandoFotos, setProcessandoFotos] = useState(false)
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
+  const inputFoto = useRef(null)
 
   const ehEdicao = Boolean(veiculo.id)
+  const titulo =
+    veiculo.marca || veiculo.modelo ? `${veiculo.marca} ${veiculo.modelo}`.trim() : 'Novo veículo'
+  const kicker = ehEdicao
+    ? `${veiculo.placa || 'Sem placa'} · ${infoStatus(veiculo.status).rotulo}`
+    : 'Novo cadastro'
 
   function atualizar(campo, valor) {
     setVeiculo((v) => ({ ...v, [campo]: valor }))
+    setErro('')
   }
 
   async function aoEscolherFotos(evento) {
     const arquivos = Array.from(evento.target.files || [])
     if (arquivos.length === 0) return
-
     setProcessandoFotos(true)
     setErro('')
     try {
       const novas = []
       for (const arquivo of arquivos) {
         const blob = await redimensionarImagem(arquivo)
-        const url = await enviarFoto(blob)
-        novas.push(url)
+        novas.push(await enviarFoto(blob))
       }
       setVeiculo((v) => ({ ...v, fotos: [...v.fotos, ...novas] }))
     } catch (err) {
       setErro(err.message || 'Não foi possível enviar uma das imagens.')
     } finally {
       setProcessandoFotos(false)
-      evento.target.value = '' // permite escolher o mesmo arquivo novamente
+      evento.target.value = ''
     }
   }
 
@@ -66,34 +88,31 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     setVeiculo((v) => ({ ...v, fotos: v.fotos.filter((_, i) => i !== indice) }))
   }
 
-  // Converte os campos de texto para números antes de salvar.
   function prepararParaSalvar(v) {
-    const paraNumero = (x) => (x === '' || x == null ? 0 : Number(x))
+    const num = (x) => (x === '' || x == null ? 0 : Number(x))
     return {
       ...v,
       ano: v.ano === '' || v.ano == null ? null : Number(v.ano),
       anoModelo: v.anoModelo === '' || v.anoModelo == null ? null : Number(v.anoModelo),
       estoqueDesde: v.estoqueDesde || null,
-      quilometragem: paraNumero(v.quilometragem),
-      precoCompra: paraNumero(v.precoCompra),
-      precoVenda: paraNumero(v.precoVenda),
+      quilometragem: num(v.quilometragem),
+      precoCompra: num(v.precoCompra),
+      precoVenda: num(v.precoVenda),
       pendencias: v.pendencias.map((p) => ({
         ...p,
-        custoEstimado: paraNumero(p.custoEstimado),
-        custoReal: paraNumero(p.custoReal),
+        custoEstimado: num(p.custoEstimado),
+        custoReal: num(p.custoReal),
       })),
     }
   }
 
-  async function salvar(evento) {
-    evento.preventDefault()
+  async function salvar() {
     setErro('')
-
     if (!veiculo.marca.trim() || !veiculo.modelo.trim()) {
       setErro('Preencha ao menos a marca e o modelo do veículo.')
+      window.scrollTo(0, 0)
       return
     }
-
     setSalvando(true)
     try {
       await salvarVeiculo(prepararParaSalvar(veiculo))
@@ -101,215 +120,342 @@ export default function VeiculoForm({ veiculo: veiculoInicial, onSalvo, onCancel
     } catch (err) {
       setErro(err.message || 'Não foi possível salvar o veículo.')
       setSalvando(false)
+      window.scrollTo(0, 0)
     }
   }
 
-  const custoTotal = calcularCustoTotal(veiculo)
+  async function excluir() {
+    setExcluindo(true)
+    try {
+      await removerVeiculo(veiculo.id)
+      onSalvo()
+    } catch (err) {
+      setErro(err.message || 'Não foi possível excluir o veículo.')
+      setExcluindo(false)
+      setConfirmarExclusao(false)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  const custo = calcularCustoTotal(veiculo)
   const lucro = calcularLucroEstimado(veiculo)
+  const margem = calcularMargemPercentual(veiculo)
+  const resolvidas = custoPendenciasResolvidas(veiculo)
+  const abertas = veiculo.pendencias.filter((p) => !p.resolvida).length
+
+  const resumoLinhas = [
+    { rotulo: 'Preço de compra', valor: formatarBRLCompacto(veiculo.precoCompra), borda: '1px solid var(--color-divider)', peso: 400 },
+    { rotulo: '+ Pendências resolvidas', valor: formatarBRLCompacto(resolvidas), borda: '2px solid var(--color-text)', peso: 400 },
+    { rotulo: 'Custo total', valor: formatarBRLCompacto(custo), borda: '1px solid var(--color-divider)', peso: 800 },
+    { rotulo: 'Preço de venda', valor: formatarBRLCompacto(veiculo.precoVenda), borda: '0', peso: 800 },
+  ]
 
   return (
-    <form className="form" onSubmit={salvar}>
-      <div className="form__cabecalho">
-        <h2>{ehEdicao ? 'Editar veículo' : 'Novo veículo'}</h2>
-        <button type="button" className="botao botao--neutro" onClick={onCancelar}>
-          Voltar
+    <section>
+      {/* Topo */}
+      <div style={{ padding: '28px 0 24px', borderBottom: '2px solid var(--color-divider)' }}>
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={onCancelar}
+          style={{ marginLeft: -4, marginBottom: 12 }}
+        >
+          <IconeVoltar size={16} />
+          Voltar ao pátio
         </button>
+        <div className="kicker" style={{ marginBottom: 6 }}>
+          {kicker}
+        </div>
+        <h1 style={{ fontSize: 48, lineHeight: 1, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
+          {titulo}
+        </h1>
+        <div className="grupo">
+          {STATUS.map((s) => (
+            <button
+              key={s.valor}
+              type="button"
+              className={'grupo__opt' + (veiculo.status === s.valor ? ' ativo' : '')}
+              style={{ padding: '9px 16px' }}
+              onClick={() => atualizar('status', s.valor)}
+            >
+              {s.rotulo}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {erro && <p className="aviso-erro">{erro}</p>}
+      {erro && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: '12px 16px',
+            background: 'var(--color-accent-100)',
+            color: 'var(--color-accent-800)',
+            fontWeight: 600,
+            display: 'flex',
+            gap: 10,
+            alignItems: 'center',
+          }}
+        >
+          <IconeAlerta size={16} />
+          {erro}
+        </div>
+      )}
 
-      {/* --- Dados do veículo --- */}
-      <fieldset className="form__secao">
-        <legend>Dados do veículo</legend>
-        <div className="form__grade">
-          <div className="campo">
-            <label>Marca *</label>
-            <input
-              type="text"
-              value={veiculo.marca}
-              onChange={(e) => atualizar('marca', e.target.value)}
-              placeholder="Ex.: Volkswagen"
-            />
-          </div>
-          <div className="campo">
-            <label>Modelo *</label>
-            <input
-              type="text"
-              value={veiculo.modelo}
-              onChange={(e) => atualizar('modelo', e.target.value)}
-              placeholder="Ex.: Gol 1.0"
-            />
-          </div>
-          <div className="campo">
-            <label>Ano fabricação</label>
-            <input
-              type="number"
-              value={veiculo.ano}
-              onChange={(e) => atualizar('ano', e.target.value)}
-              placeholder="Ex.: 2022"
-            />
-          </div>
-          <div className="campo">
-            <label>Ano modelo</label>
-            <input
-              type="number"
-              value={veiculo.anoModelo}
-              onChange={(e) => atualizar('anoModelo', e.target.value)}
-              placeholder="Ex.: 2023"
-            />
-          </div>
-          <div className="campo">
-            <label>Cor</label>
-            <input
-              type="text"
-              value={veiculo.cor}
-              onChange={(e) => atualizar('cor', e.target.value)}
-              placeholder="Ex.: Prata"
-            />
-          </div>
-          <div className="campo">
-            <label>Placa</label>
-            <input
-              type="text"
-              value={veiculo.placa}
-              onChange={(e) => atualizar('placa', e.target.value.toUpperCase())}
-              placeholder="Ex.: ABC1D23"
-            />
-          </div>
-          <div className="campo">
-            <label>Quilometragem</label>
-            <input
-              type="number"
-              min="0"
-              value={veiculo.quilometragem}
-              onChange={(e) => atualizar('quilometragem', e.target.value)}
-              placeholder="Ex.: 48000"
-            />
-          </div>
-          <div className="campo">
-            <label>No estoque desde</label>
-            <input
-              type="date"
-              value={veiculo.estoqueDesde}
-              onChange={(e) => atualizar('estoqueDesde', e.target.value)}
-            />
-          </div>
-          <div className="campo">
-            <label>Status</label>
-            <select
-              value={veiculo.status}
-              onChange={(e) => atualizar('status', e.target.value)}
-            >
-              {STATUS.map((s) => (
-                <option key={s.valor} value={s.valor}>
-                  {s.rotulo}
-                </option>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 48, alignItems: 'flex-start', paddingTop: 8 }}>
+        <div style={{ flex: '1 1 560px', minWidth: 0 }}>
+          {/* 01 Dados */}
+          <Secao numero="01" nome="Dados">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+              {CAMPOS.map((c) => (
+                <div className="field" key={c.k}>
+                  <label>{c.label}</label>
+                  <input
+                    className="input"
+                    type={c.type}
+                    value={veiculo[c.k]}
+                    placeholder={c.ph}
+                    min={c.type === 'number' ? '0' : undefined}
+                    onChange={(e) =>
+                      atualizar(c.k, c.k === 'placa' ? e.target.value.toUpperCase() : e.target.value)
+                    }
+                    style={{ minHeight: 40 }}
+                  />
+                </div>
               ))}
-            </select>
-          </div>
-        </div>
-      </fieldset>
-
-      {/* --- Preços --- */}
-      <fieldset className="form__secao">
-        <legend>Preços</legend>
-        <div className="form__grade">
-          <div className="campo">
-            <label>Preço de compra</label>
-            <div className="campo-moeda">
-              <span className="campo-moeda__prefixo">R$</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={veiculo.precoCompra}
-                onChange={(e) => atualizar('precoCompra', e.target.value)}
-                placeholder="Quanto você pagou"
-              />
             </div>
-          </div>
-          <div className="campo">
-            <label>Preço de venda</label>
-            <div className="campo-moeda">
-              <span className="campo-moeda__prefixo">R$</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={veiculo.precoVenda}
-                onChange={(e) => atualizar('precoVenda', e.target.value)}
-                placeholder="Quanto vai anunciar"
-              />
+          </Secao>
+
+          {/* 02 Preços */}
+          <Secao numero="02" nome="Preços">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                {[
+                  { k: 'precoCompra', label: 'Preço de compra', ph: 'Quanto você pagou' },
+                  { k: 'precoVenda', label: 'Preço de venda', ph: 'Quanto vai anunciar' },
+                ].map((c) => (
+                  <div className="field" key={c.k}>
+                    <label>{c.label}</label>
+                    <div className="moeda">
+                      <span className="moeda__prefixo">R$</span>
+                      <input
+                        className="input"
+                        type="number"
+                        min="0"
+                        value={veiculo[c.k]}
+                        placeholder={c.ph}
+                        onChange={(e) => atualizar(c.k, e.target.value)}
+                        style={{ minHeight: 40 }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className={'caixa-check' + (veiculo.mostrarPrecoNoSite ? ' caixa-check--marcado' : '')}
+                onClick={() => atualizar('mostrarPrecoNoSite', !veiculo.mostrarPrecoNoSite)}
+              >
+                <span className="caixa-check__box">
+                  {veiculo.mostrarPrecoNoSite && <IconeCheck size={12} />}
+                </span>
+                Mostrar o preço na vitrine{' '}
+                <span style={{ color: 'var(--color-neutral-700)' }}>
+                  — desligado, aparece “Consulte”
+                </span>
+              </button>
             </div>
-          </div>
+          </Secao>
+
+          {/* 03 Fotos */}
+          <Secao
+            numero="03"
+            nome="Fotos"
+            meta={veiculo.fotos.length ? `${veiculo.fotos.length} ${veiculo.fotos.length === 1 ? 'foto' : 'fotos'}` : 'Sem fotos'}
+          >
+            <input
+              ref={inputFoto}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={aoEscolherFotos}
+              style={{ display: 'none' }}
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+              {veiculo.fotos.map((foto, i) => (
+                <div key={i} style={{ position: 'relative', aspectRatio: '4 / 3', background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
+                  <img className="grayscale" src={foto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      background: 'var(--color-text)',
+                      color: 'var(--color-bg)',
+                      fontSize: 11,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      padding: '3px 8px',
+                    }}
+                  >
+                    {i === 0 ? 'Capa' : 'Foto ' + (i + 1)}
+                  </span>
+                  <button
+                    type="button"
+                    className="foto-remover"
+                    title="Remover foto"
+                    onClick={() => removerFoto(i)}
+                  >
+                    <IconeX size={14} />
+                  </button>
+                </div>
+              ))}
+              <button type="button" className="foto-add" onClick={() => inputFoto.current?.click()}>
+                <IconeMais size={20} sw={2} />
+                {processandoFotos ? 'Enviando…' : 'Adicionar fotos'}
+              </button>
+            </div>
+          </Secao>
+
+          {/* 04 Pendências */}
+          <Secao
+            numero="04"
+            nome="Pendências"
+            meta={veiculo.pendencias.length ? `${abertas} em aberto` : 'Nenhuma'}
+            semBorda
+          >
+            <PendenciasEditor
+              pendencias={veiculo.pendencias}
+              aoAlterar={(lista) => atualizar('pendencias', lista)}
+            />
+          </Secao>
         </div>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={veiculo.mostrarPrecoNoSite}
-            onChange={(e) => atualizar('mostrarPrecoNoSite', e.target.checked)}
-          />
-          Mostrar o preço no site (se desmarcado, a vitrine exibirá "Consulte")
-        </label>
-      </fieldset>
 
-      {/* --- Fotos --- */}
-      <fieldset className="form__secao">
-        <legend>Fotos</legend>
-        <input type="file" accept="image/*" multiple onChange={aoEscolherFotos} />
-        {processandoFotos && <p className="texto-suave">Enviando fotos…</p>}
-
-        {veiculo.fotos.length > 0 && (
-          <div className="fotos-grade">
-            {veiculo.fotos.map((foto, indice) => (
-              <div key={indice} className="foto-item">
-                <img src={foto} alt={`Foto ${indice + 1}`} />
-                <button
-                  type="button"
-                  className="foto-item__remover"
-                  title="Remover foto"
-                  onClick={() => removerFoto(indice)}
-                >
-                  ×
-                </button>
+        {/* Resumo financeiro */}
+        <aside
+          style={{
+            flex: '1 1 300px',
+            maxWidth: 380,
+            position: 'sticky',
+            top: 88,
+            marginTop: 28,
+            background: 'var(--color-surface)',
+            borderTop: '4px solid var(--color-text)',
+          }}
+        >
+          <div style={{ padding: '20px 20px 0', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-700)' }}>
+            Resumo financeiro
+          </div>
+          <div style={{ padding: '8px 20px 0' }}>
+            {resumoLinhas.map((r) => (
+              <div
+                key={r.rotulo}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '10px 0',
+                  borderBottom: r.borda,
+                  fontSize: 14,
+                  fontWeight: r.peso,
+                }}
+              >
+                <span>{r.rotulo}</span>
+                <span>{r.valor}</span>
               </div>
             ))}
           </div>
-        )}
-      </fieldset>
-
-      {/* --- Pendências / avarias --- */}
-      <fieldset className="form__secao">
-        <legend>Pendências e avarias</legend>
-        <PendenciasEditor
-          pendencias={veiculo.pendencias}
-          aoAlterar={(novaLista) => atualizar('pendencias', novaLista)}
-        />
-      </fieldset>
-
-      {/* --- Resumo de custos --- */}
-      <div className="resumo-custos">
-        <div className="resumo-custos__item">
-          <span className="texto-suave">Custo total</span>
-          <strong className="num">{formatarBRL(custoTotal)}</strong>
-        </div>
-        <div className="resumo-custos__item">
-          <span className="texto-suave">Lucro estimado</span>
-          <strong className={'num ' + (lucro < 0 ? 'valor-negativo' : 'valor-positivo')}>
-            {formatarBRL(lucro)}
-          </strong>
-        </div>
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-700)' }}>
+              Lucro estimado
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 800,
+                fontSize: 44,
+                lineHeight: 1.05,
+                letterSpacing: '-0.03em',
+                color: lucro < 0 ? 'var(--color-accent-700)' : 'var(--color-text)',
+              }}
+            >
+              {(lucro > 0 ? '+' : '') + formatarBRLCompacto(lucro)}
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>
+              {custo > 0 ? 'Margem de ' + pct(margem) + ' sobre o custo' : 'Informe o preço de compra'}
+            </div>
+          </div>
+          <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={salvar}
+              disabled={salvando}
+              style={{ minHeight: 48, fontSize: 15, justifyContent: 'space-between' }}
+            >
+              {salvando ? 'Salvando…' : 'Salvar veículo'}
+              <IconeCheck size={16} sw={2.5} />
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button type="button" className="btn btn-secondary" onClick={onCancelar}>
+                Cancelar
+              </button>
+              {ehEdicao && (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setConfirmarExclusao(true)}
+                >
+                  <IconeLixeira size={14} sw={2} />
+                  Excluir
+                </button>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
 
-      {/* --- Ações --- */}
-      <div className="form__acoes">
-        <button type="button" className="botao botao--neutro" onClick={onCancelar}>
-          Cancelar
-        </button>
-        <button type="submit" className="botao botao--primario" disabled={salvando}>
-          {salvando ? 'Salvando…' : 'Salvar'}
-        </button>
+      {confirmarExclusao && (
+        <div className="dialog-backdrop" onClick={() => setConfirmarExclusao(false)}>
+          <div className="dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-title">Excluir {titulo}?</div>
+            <div className="dialog-body">
+              O veículo, as fotos e as pendências serão removidos. Esta ação não pode ser desfeita.
+            </div>
+            <div className="dialog-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setConfirmarExclusao(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="btn btn-primary" onClick={excluir} disabled={excluindo}>
+                {excluindo ? 'Excluindo…' : 'Excluir veículo'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function Secao({ numero, nome, meta, semBorda, children }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '120px minmax(0, 1fr)',
+        gap: 24,
+        padding: '28px 0',
+        borderBottom: semBorda ? 'none' : '2px solid var(--color-divider)',
+      }}
+    >
+      <div>
+        <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 28, color: 'var(--color-accent)', lineHeight: 1 }}>
+          {numero}
+        </div>
+        <div style={{ fontWeight: 600, marginTop: 6 }}>{nome}</div>
+        {meta && <div style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{meta}</div>}
       </div>
-    </form>
+      <div style={{ minWidth: 0 }}>{children}</div>
+    </div>
   )
 }
